@@ -3,7 +3,7 @@
 People at COMPANY NAME
 ---
 
-- [Jane Doe, Engineering](./jane_doe.md)
+- [Sunny Kim, Engineering](./sunny_kim.md)
 - ...
 
 ### Team Leader
