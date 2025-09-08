@@ -4,6 +4,7 @@ People at COMPANY NAME
 ---
 
 - [Sunny Kim, Engineering](./sunny_kim.md)
+- [David Barsamyan, Engineering](./david_barsamyan.md)
 - ...
 
 ### Team Leader
