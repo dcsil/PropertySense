@@ -14,4 +14,7 @@ Sunny was selected (temporarily) due to his experience with managing teams using
 
 #### Responsibilities
 <!-- What is their role for your team?	--> 
-- ...
+- Create relevant issues/tickets on github projects
+- Ensure steady progress on the project board and communicate with team to be aware of any blockers
+- Communicate with course instructors if anything needs to be escalated
+- Ensure that scope of work stays focused and that work is delegated based on requirements
