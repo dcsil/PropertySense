@@ -10,6 +10,7 @@
 
 - [GitHub](https://github.com/Barsamyan-D)
 - [LinkedIn](https://www.linkedin.com/in/david-barsamyan-213a75265/)
+- [Resume](https://drive.google.com/file/d/18P9K8RsuihGIpStAYG5A4SzqrXvwPV6u/view?usp=sharing)
 
 ## About David
 
@@ -17,12 +18,12 @@ David is a final year Computer Science Specialist undergrad at UofT. He moved fr
 
 ## Strengths
 
-- Attentive to details
-- Clear and effective communicator
-- Strong organizational skills
+- Attentive to details in my work, striving for polished and exact outcomes.
+- Clear and effective communicator during meetings, presentations, and team discussions.
+- Strong organizational skills when managing tasks, priorities, and deadlines.
   
 ## Weaknesses
 
-- Incapable of multitasking
-- Can get caught up in less important details
-- Sometimes hesitant to delegate work
+- Incapable of multitasking.
+- Can get caught up in less important details.
+- Sometimes hesitant to delegate work.
