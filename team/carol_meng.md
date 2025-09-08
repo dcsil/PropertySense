@@ -1,6 +1,6 @@
 # Carol Meng
 
-(insert image here)
+![Carol Profile](./carol_meng.jpg)
 
 - Computer Science Specialist
 - Software Developer
