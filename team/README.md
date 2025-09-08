@@ -4,6 +4,7 @@ People at DeezSil
 ---
 
 - [Sunny Kim, Engineering](./sunny_kim.md)
+- [David Barsamyan, Engineering](./david_barsamyan.md)
 - [Carol Meng, Engineering](./carol_meng.md)
 
 ### Team Leader
