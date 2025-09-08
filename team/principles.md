@@ -14,7 +14,7 @@ Our primary goal with these expectations for communications is to promote a posi
 We are all here to support each other. We are a TEAM! Not just a group.
 
 Meetings:
-We will hold regular meetings for our team members.
+We will hold regular meetings for our team members every Monday at 3PM EST.
 Members are responsible for attending the team meetings – if they are not able to make it, they must let the other attendees know as soon as possible.
 They must then make a plan to compensate for their absence. This could involve having someone present replace their role in the meeting or deliver an update on their behalf, and would also involves catching up on meeting contents to understand what new tasks they have.
 Work:
