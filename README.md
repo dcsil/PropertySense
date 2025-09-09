@@ -1,6 +1,6 @@
 # DeezSil
 
-![Team Logo](./logo.png)
+![Team Logo](./deezsil_logo.png)
 
 #### Team Slack Channel: #team\-\<your\-company\-name\-here\>
 
