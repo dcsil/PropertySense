@@ -4,7 +4,7 @@
 
 #### Team Slack Channel: #team\-\<your\-company\-name\-here\>
 
-DeezSil TODO is a company founded in the THEME industry. DeezSil TODO aims to VISION STATEMENT.
+DeezSil is a company founded in the software development industry. DeezSil aims to build software that will solve real-world problems.
 
 Table of Contents
 ---
