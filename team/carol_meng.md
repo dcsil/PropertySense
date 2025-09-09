@@ -24,6 +24,6 @@ Carol is a final year Computer Science undergrad at UofT. Interested in applicat
 
 ## Weaknesses
 
--	  Switching tasks takes effort. Productivity goes down significantly if she tries to multitask
--   Needs to make scripts for public speaking
--   Has a tendency to work at the last minute
+-	Switching tasks takes effort. Productivity goes down significantly if she tries to multitask
+- Needs to make scripts for public speaking
+- Has a tendency to work at the last minute
