@@ -1,6 +1,6 @@
-[DeezSil Principles](./principles.md)
+[PropertySense Principles](./principles.md)
 
-People at DeezSil
+People at PropertySense
 ---
 
 - [Sunny Kim, Engineering](./sunny_kim.md)
