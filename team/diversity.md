@@ -1,10 +1,11 @@
-# Diversity in Klutch
+# Diversity in PropertySense
 
 The Canadian society is a mosaic of different backgrounds and cultures. This year’s theme, healthcare, affects everyone in that mosaic. This makes Klutch’s customer base incredibly diverse. Therefore, diversity is incredibly essential to have within our team and we value it immensely. In this document we will be expanding on how diversity is an integral part of Klutch’s team dynamic. We will also be discussing how our team lacks in terms of diversity and our plan to mitigate that knowledge gap with subject matter experts.
 
 
 Team Background & Strengths
 ---
+Sunny was born in South Korea and grew up following South Korean customs in his home. He has also spent time growing up in the rural Maritimes, being influenced by french-canadian/acadian culture, spending his youth playing hockey and speaking French. His diverse cultural experience give him a wide perspective that aligns with both east and western values, along with a metropolitan and rural experiences. He has lived in both full sized homes under a single mother running airbnbs in the basement, shared condo units, and student housing in downtown Toronto, with roommate from India, Bangladesh, Hong Kong and more. This has shaped his understanding of how the value living spaces are established differently based on varying superstitions, religions, cuisines, and customs.
 
 Coming all the way from Singapore, our first two members bring a global perspective to the team. As a Business Administration student, Jemin provides invaluable business expertise to Klutch, as well as a critical eye for UI/UX design. As a well-rounded individual, Jemin has participated in various sports competitions, which have honed his communication skills, ability to think on the spot, and endurance to remain calm under pressure.
 
@@ -17,6 +18,9 @@ Finally, Sonata can provide her peers with an insight into the Canadian market w
 
 ## Weak Spots
 
+Our team's various backgrounds still don't fill all the gaps required to understand the perspective of our user base primarily consisting of insurance brokers and inspectors. We recognize that no amount of data analysis can give the full perspective on the subjective annoyances and problems encountered by workers in this industry (at their individual level). To mitigate this, we shouldn't overlook the insights we gain from customer surveys and other forms of feedback, plus advice from domain specific experts. Another point to consider is that we are all engineers with a strong affinity for problem-solving in a logical, pragmatic manner. This may pigeonhole our thinking and therefore solutions into a product that only caters for these kinds of individuals, while the actual audiences may want a product that provides them with  more holistic, macroscopic information. This will be especially important for UI/UX.
+
+~~
 Despite our team’s rich blend of cultural and technical backgrounds, we are still lacking in some key areas. For example, Klutch is launching in a Canadian market. However, we have limited Canadian business insight on the team due to our international background. Additionally, none of us have any prior experience in healthcare, so it would be challenging for us to identify the most current market trends and opportunities in the field. Therefore, we need to focus on bringing in health professionals that could provide a better outlook on the industry.
 Our team also lacks some important soft skills. Primarily, we are a group of introverts. This could be perceived as a weakness in a startup setting, as we will constantly be put in situations that push us to break out of our comfort zone. Aside from this, we also face some key technical challenges. None of us have formal Machine Learning experience, which puts us at a slight disadvantage given our partner this year, Dessa. In addition, considering how large the mHealth market has become, we identified another shortcoming in our team’s lack of experience in mobile app development.
 
@@ -35,7 +39,7 @@ Our team size limits our diversity. For example, Klutch consists of abled indivi
 
 ## How this can impact us
 
-Bias in product design and development can be detrimental to the product’s success. Thus, we are actively trying to avoid biases by integrating diversity within our team. We are doing this by consulting subject matter experts as well as diversifying our customer testing base to include all possible demographics. We acknowledge that our product will not be perfect due to the limitations within our team, but we are actively committed to acknowledging customer feedback with the goal of making our product as inclusive as possible.
+Considering diverse perspectives is vital in generating a robust solution, in addition to the importance of a accessibility for user experience. Our approach to product development incorporates diverse expertise and cross-user validation strategies. We collaborate with domain experts and apply inclusive testing protocols across all stages of development. Recognizing that refinement is ongoing, we sustain open feedback mechanisms to drive continual enhancement and inclusivity in our product.
 
 ### Sources
 [1] https://www.cbc.ca/news/canada/north/health-care-racial-bias-north-1.4731483
