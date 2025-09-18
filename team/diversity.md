@@ -2,7 +2,7 @@
 
 PropertySense's user base consists of insurance brokers and inspectors all throughout the industry with varying backgrounds and perspectives. Although, there is no doubt that there is a constraint in the types of people that we are target to use the application, we want our application to be available to the widest net, meaning that we must be agnostic to the diversity inherent in the individuals that make up our SOM. This document elaborates on how PropertySense can meet those diversity needs, where we are weak, and our strategy to fill in the gaps. 
 
-Team Background & Strengths
+# Team Background & Strengths
 ---
 Sunny was born in South Korea and grew up following South Korean customs in his home. He has also spent time growing up in the rural Maritimes, being influenced by french-canadian/acadian culture, spending his youth playing hockey and speaking French. His diverse cultural experience give him a wide perspective that aligns with both east and western values, along with a metropolitan and rural experiences. He has lived in both full sized homes under a single mother running airbnbs in the basement, shared condo units, and student housing in downtown Toronto, with roommate from India, Bangladesh, Hong Kong and more. This has shaped his understanding of how the value living spaces are established differently based on varying superstitions, religions, cuisines, and customs.
 
