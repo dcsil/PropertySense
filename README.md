@@ -1,10 +1,10 @@
-# DeezSil
+# PropertySense
 
-![Team Logo](./deezsil_logo.png)
+![Team Logo](./propertysense_logo.png)
 
-#### Team Slack Channel: #team-deezsil>
+#### Team Slack Channel: #team-propertysense>
 
-DeezSil is a company founded in the Web3 industry. DeezSil aims to make **De**centralization **ez**.
+PropertySense is a company founded in the Property Insurance industry. PropertySense aims to provide AI risk analysis and valuation for insurance companies, brokers, inspectors and more.
 
 Table of Contents
 ---
