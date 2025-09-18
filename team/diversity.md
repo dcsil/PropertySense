@@ -1,7 +1,6 @@
 # Diversity in PropertySense
 
-The Canadian society is a mosaic of different backgrounds and cultures. This year’s theme, healthcare, affects everyone in that mosaic. This makes Klutch’s customer base incredibly diverse. Therefore, diversity is incredibly essential to have within our team and we value it immensely. In this document we will be expanding on how diversity is an integral part of Klutch’s team dynamic. We will also be discussing how our team lacks in terms of diversity and our plan to mitigate that knowledge gap with subject matter experts.
-
+PropertySense's user base consists of insurance brokers and inspectors all throughout the industry with varying backgrounds and perspectives. Although, there is no doubt that there is a constraint in the types of people that we are target to use the application, we want our application to be available to the widest net, meaning that we must be agnostic to the diversity inherent in the individuals that make up our SOM. This document elaborates on how PropertySense can meet those diversity needs, where we are weak, and our strategy to fill in the gaps. 
 
 Team Background & Strengths
 ---
