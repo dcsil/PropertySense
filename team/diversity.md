@@ -31,7 +31,7 @@ In order to mitigate these gaps in our expertise, we are working to consult a nu
 
 ## Customer Diversity
 
-Our team size limits our diversity. For example, Klutch consists of abled individuals which makes us lack the perspective of folks who have accessibility needs. Additionally, we also fail to represent another key customer group in healthcare, which are the seniors. If we are developing a product that highly values diversity, then we should be seeking the perspectives of people from all across communities (to the best of our abilities and resources). Klutch is therefore planning on diversifying our customer testing base by making sure that all key demographics from the Canadian market are considered. This must be implemented in order to avoid any possible blindspots that may exist in our product.
+Our team’s diversity has limits when compared to our intended user base of insurance brokers and inspectors. First, we are all young, in our early 20s, whereas most users are significantly older, with different work habits, priorities, and expectations. This may lead to mismatched expectations around workflows and platform preferences. Second, we all come from a software and computer science background, which means we naturally focus on technical, logical solutions. This could result in overlooking practical challenges or subjective frustrations that professionals experience daily. To address these gaps, we will actively seek user feedback, conduct surveys, and consult with domain experts to ensure the product reflects the real needs and preferences of the target users.
 
 
 ## How this can impact us
