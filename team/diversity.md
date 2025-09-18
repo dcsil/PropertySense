@@ -21,7 +21,7 @@ Beyond our backgrounds as engineers, we attempt to represent personal demographi
 
 ## Subject Matter Experts
 
-In order to mitigate these gaps in our expertise, we are working to consult a number of subject matter experts throughout our market research and product development. Health professionals such as doctors, nurses, and pharmacists will be able to provide us with invaluable insight into the healthcare industry. They will introduce us to the existing problem spaces in the Canadian market and provide guidance in developing products that cater to the customers’ needs. Furthermore, we are looking to bring in some Machine Learning experts to support us on the technical side of product development. Of course, our first point of contact would be our main partner, Dessa. However, we are also open to consulting other prospects such as university professors and graduate students who are conducting their research on the subject.
+In order to mitigate these gaps in our expertise, we can consult licensed insurance adjusters and property inspectors such as from the Insurance Institute of Canada or local chapters in Toronto. They can provide experience and insight on the property assessment process, like photo quality for accurate scoring. We can also potentially use existing connections some of our team members have (eg. Gary for his experience selling condos). For computer vision, we can reach out to UofT professors working in this field like Sanja Fidler and David Lindell about advice on designing our CV model and pipeline. We can also connect with insurtech experts from firms like Verisk via online meetings for their industry-specific knowledge.
 
 
 ## Customer Diversity
