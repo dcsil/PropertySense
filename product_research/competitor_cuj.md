@@ -4,12 +4,13 @@
 
 **Group Members:**
 - Sunny Kim – 100084121931
+- Carol Meng - 1008593675
 
-**Submission Date:** 2025/09/23
+**Submission Date:** 2025/09/24
 
 ## ⚡ TL;DR (Max 65 words)
 
-We tested multiple property valuation tools as Canadian homeowners seeking accurate home estimates. Started with MasterKey/Zillow but hit geographic restrictions. Tried Zolo (failed address lookup) then Wahi, which provided $659K estimate with $593K-$725K range. Process took only 5 minutes but result seemed low for our 3-bedroom unit. No tools used photo data for enhanced accuracy.
+We tested multiple property valuation tools as Canadian homeowners seeking accurate home estimates. Started with Zillow but hit edge cases with weird listed prices and insufficient info. Tried Wahi (failed address lookup) then Zolo, which gave an estimate $1million off from similar properties in the area. Calculation was fast and convenient but results seem arbitrary. No tools used photo data for enhanced accuracy.
 
 ## 🎯 Goal
 
@@ -17,9 +18,8 @@ As a **Canadian homeowner considering selling my 3-bedroom condo**, I want to **
 
 ## 🧰 Tools Used
 
-- MasterKey property valuation platform
-- Zillow website and mobile app
-- Google Search for Canadian alternatives
+- Zillow website
+- Google Search for Canadian property valuation options
 - Zolo property valuation platform
 - Wahi home valuation tool
 - Safari browser on iPhone
