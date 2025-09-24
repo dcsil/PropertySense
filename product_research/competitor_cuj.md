@@ -103,42 +103,41 @@ While the entire process took only 5 minutes and 11 seconds, this speed came at 
 
 | Task | Time | Switches |
 |------|------|----------|
-| Google search for valuation tools | ~45 sec | 0 |
-| Navigate to MasterKey and read requirements | ~30 sec | 0 |
-| Go to Zillow and choose web interface | ~25 sec | 1 |
-| Zillow account signup process | ~35 sec | 0 |
-| Attempt Canadian address lookup | ~20 sec | 0 |
-| Search for listing functionality | ~40 sec | 0 |
-| Google "how to post Zillow listing" | ~30 sec | 1 |
-| Discover US-only limitation | ~15 sec | 0 |
-| Search "home valuation tools Canada" | ~25 sec | 1 |
-| Try Zolo platform and address failure | ~35 sec | 1 |
-| Navigate to Wahi platform | !20 sec | 1 |
-| Complete Wahi signup and property details | ~55 sec | 0 |
-| Review $659K valuation results | ~15 sec | 0 |
+| Google search for valuation tools | 1 min 30 sec | 0 |
+| Navigate to MasterKey and read requirements | 45 sec | 0 |
+| Go to Zillow and choose web interface | 40 sec | 1 |
+| Zillow account signup process | 1 min 15 sec | 0 |
+| Attempt Canadian address lookup | 1 min 45 sec | 0 |
+| Search for listing functionality | 1 min 20 sec | 0 |
+| Google "how to post Zillow listing" | 50 sec | 1 |
+| Discover US-only limitation | 35 sec | 0 |
+| Search "home valuation tools Canada" | 55 sec | 1 |
+| Try Zolo platform and address failure | 1 min 25 sec | 1 |
+| Navigate to Wahi platform | 40 sec | 1 |
+| Complete Wahi signup and property details | 1 min 40 sec | 0 |
+| Review $659K valuation results | 30 sec | 0 |
 
-**Total Time:** 5 minutes 11 seconds  
+**Total Time:** 12 minutes  
 **Total Context Switches:** 5
 
 ## Full CUJ Table (Step-by-Step Documentation)
 
 | Step | Notes (What + Why) | Screenshot |
 |------|-------------------|------------|
-| 1 | Googled "property valuation tools" to find automated home estimate platforms. Found MasterKey among top results. | ![google-search-valuation-tools.png] |
-| 2 | Clicked MasterKey link. Homepage clearly stated requirement to "paste a Zillow link" to get started - unusual approach. | ![masterkey-homepage-zillow-requirement.png] |
-| 3 (switch) | Navigated to Zillow.com as instructed by MasterKey. Website prompted choice between mobile app and web interface. | ![zillow-homepage-app-choice.png] |
-| 4 | Selected "Continue in Safari" to use web interface. Clean and professional presentation, familiar Zillow branding. | ![zillow-continue-safari.png] |
-| 5 | Clicked "Sign Up" and completed account creation with email and password. Process was straightforward and quick. | ![zillow-signup-form.png] |
-| 6 | Attempted to enter Toronto condo address in search bar to get home estimate. System couldn't locate Canadian address. | ![zillow-address-lookup-fail.png] |
-| 7 | Decided to try uploading property as listing instead. Looked for "Post a Listing" or similar option in navigation. | ![zillow-navigation-search.png] |
-| 8 | Found mostly marketing content about "Zillow Partner Agent" services instead of clear listing tools. Confusing user flow. | ![zillow-partner-agent-marketing.png] |
-| 9 (switch) | Used Google to search "how to post Zillow listing" to find proper listing interface since navigation was unclear. | ![google-search-zillow-listing.png] |
-| 10 | Google results led to Zillow's listing section. Discovered that only US addresses are supported - geographic limitation not communicated earlier. | ![zillow-us-only-limitation.png] |
-| 11 (switch) | Searched "home valuation tools Canada" to find platforms that actually support Canadian properties. | ![google-search-canada-valuation.png] |
-| 12 (switch) | Tried Zolo platform first. Interface looked promising for Canadian properties but couldn't find my specific address either. | ![zolo-address-lookup-fail.png] |
-| 13 (switch) | Moved to Wahi platform. Successfully found my Toronto condo address and began valuation process. Finally! | ![wahi-address-success.png] |
-| 14 | Wahi required additional property details including annual taxes and maintenance fees. Had to look up exact figures from recent documents. | ![wahi-property-details-form.png] |
-| 15 | Submitted all required information and received instant results: $659K estimate with range $593K-$725K. Fast but seemed low for 3-bedroom. | ![wahi-valuation-results.png] |
+| 1 | Googled "property valuation tools" to find automated home estimate platforms. Found MasterKey among top results. | |
+| 2 | Entry to MasterKey landing page. Homepage clearly stated requirement to "paste a Zillow link" to get started. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/32e5a507-c8db-41b3-ab47-95bac2db6897" /> |
+| 3 (switch) | Navigated to Zillow.com as instructed by MasterKey. Website prompted choice between mobile app and web interface. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/2214c772-084c-4a10-9d3a-e647bc6e74bd"/> |
+| 5 | Selected "Continue in Safari" to use web interface. Clicked "Sign In" and completed account creation with Apple. Process was straightforward and quick. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/6874128b-f704-4b9a-9d93-947e75e9d5ec" /> |
+| 6 | Attempted to enter Toronto condo address in search bar to get home estimate. System couldn't locate exact Unit number. | <img width="1290" height="2796" alt="IMG_3816" src="https://github.com/user-attachments/assets/5230dcdd-9995-4e9d-aaf2-8fc2cb0d7403" /> |
+| 7 | Decided to try uploading property as listing instead. Looked for "Post a Listing" or similar option in navigation. | <img width="1290" height="2796" alt="IMG_3814" src="https://github.com/user-attachments/assets/82567603-33b6-48e5-9d6f-5c86656e0db5" /> |
+| 8 | Found mostly marketing content about "Zillow Partner Agent" services instead of clear listing tools. Confusing user flow. | <img width="1290" height="2796" alt="IMG_3818" src="https://github.com/user-attachments/assets/3f3a4b69-9044-40cf-97ec-54dba58de932" /> |
+| 9 (switch) | Used Google to search "how to post Zillow listing" to find proper listing interface since navigation was unclear. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/71f70cc0-7fce-481a-aa55-b51290933981" /> |
+| 10 | Google results led to Zillow's listing section. Discovered that only US addresses are supported - geographic limitation not communicated earlier. | <img width="1290" height="2796" alt="IMG_3828" src="https://github.com/user-attachments/assets/6e9c89df-dbc5-4aa3-8cfc-cb766420ccd1" /> |
+| 11 (switch) | Searched "home valuation tools Canada" to find platforms that actually support Canadian properties. | <img width="1290" height="2796" alt="IMG_3832" src="https://github.com/user-attachments/assets/01d031e7-58a6-49f9-9ee5-efed44ed7e14" /> |
+| 12 (switch) | Tried Zolo platform first. Interface looked promising for Canadian properties but couldn't find my specific address either. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/6396004e-ea88-49fd-b59b-1e060423d955" /> |
+| 13 (switch) | Moved to Wahi platform. Successfully found my Canadian address and began valuation process. (Still no unit number though) | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/92d440cf-ba0c-4aaa-aac0-f4f608b75e46" /> |
+| 14 | Wahi required additional property details including annual taxes and maintenance fees. Had to look up exact figures from recent documents. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/0159b75d-636a-4716-b76e-6fef835ea8da" />|
+| 15 | Submitted all required information and received instant results: $659K estimate with range $593K-$725K. Fast but seemed low for 3-bedroom. | <img width="1290" height="2796" alt="IMG_3838" src="https://github.com/user-attachments/assets/c984e59b-1e4f-4348-a743-803430c610a6" /> |
 
 ---
 
