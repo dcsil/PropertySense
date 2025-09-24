@@ -11,14 +11,15 @@
 
 ## ⚡ TL;DR (Max 65 words)
 
-We tested multiple property valuation tools as Canadian homeowners seeking accurate home estimates. Started with Zillow but hit edge cases with weird listed prices and insufficient info. Tried Wahi (failed address lookup) then Zolo, which gave an estimate $1million off from similar properties in the area. Calculation was fast and convenient but results seem arbitrary. No tools used photo data for enhanced accuracy.
+We tested multiple property valuation tools as Canadian homeowners seeking accurate home estimates. Tried Realtor.ca and Wahi (both failed address lookup). Tried Zillow but hit edge cases with weird listed prices and insufficient info. Then Zolo which gave an estimate $1million off from similar properties in the area. Fast but arbitrary results. No tools used photo data for enhanced accuracy.
 
 ## 🎯 Goal
 
-As a **Canadian homeowner considering selling my 3-bedroom condo**, I want to **get an accurate current valuation of my property using available online tools**, so that I can **understand my home's market value and determine realistic pricing expectations before making selling decisions**.
+As a **Canadian homeowner considering selling my 3-bedroom house**, I want to **get an accurate current valuation of my property using available online tools**, so that I can **understand my home's market value and determine realistic pricing expectations before making selling decisions**.
 
 ## 🧰 Tools Used
 
+- Realtor.ca
 - Zillow website
 - Google Search for Canadian property valuation options
 - Zolo property valuation platform
@@ -29,10 +30,10 @@ As a **Canadian homeowner considering selling my 3-bedroom condo**, I want to **
 ## 🧑‍💻 Persona Description
 
 **Role / Background:**  
-Canadian homeowner with a 3-bedroom condo, considering market timing for potential sale
+Canadian homeowner with a 3-bedroom house in suburban Toronto, considering market timing for potential sale
 
 **Experience Level:**  
-Familiar with basic real estate websites like Realtor.ca, comfortable with online tools, no experience with professional valuation platforms
+Familiar with basic real estate websites like Realtor.ca, comfortable with online tools, no experience using valuation platforms
 
 **Familiarity with Platform:**  
 Complete newcomer to automated valuation tools, discovered options through web search for "property valuation tools"
