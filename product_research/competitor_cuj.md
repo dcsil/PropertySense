@@ -132,19 +132,20 @@ While the entire process took only 10 minutes and 11 seconds, this speed came at
 | Step | Notes (What + Why) | Screenshot |
 |------|-------------------|------------|
 | 1 | Googled "property valuation tools" to find automated home estimate platforms. Found MasterKey among top results. | |
-| 2 | Entry to MasterKey landing page. Homepage clearly stated requirement to "paste a Zillow link" to get started. | | ![alt text](image.png)
-| 3 (switch) | Navigated to Zillow.com as instructed by MasterKey. Website prompted choice between mobile app and web interface. | |
-| 5 | Selected "Continue in Safari" to use web interface. Clicked "Sign In" and completed account creation with Apple. Process was straightforward and quick. | |
-| 6 | Attempted to enter Toronto condo address in search bar to get home estimate. System couldn't locate exact Unit number. | |
-| 7 | Decided to try uploading property as listing instead. Looked for "Post a Listing" or similar option in navigation. | |
-| 8 | Found mostly marketing content about "Zillow Partner Agent" services instead of clear listing tools. Confusing user flow. | |
-| 9 (switch) | Used Google to search "how to post Zillow listing" to find proper listing interface since navigation was unclear. | |
-| 10 | Google results led to Zillow's listing section. Discovered that only US addresses are supported - geographic limitation not communicated earlier. | |
-| 11 (switch) | Searched "home valuation tools Canada" to find platforms that actually support Canadian properties. | |
-| 12 (switch) | Tried Zolo platform first. Interface looked promising for Canadian properties but couldn't find my specific address either. | |
-| 13 (switch) | Moved to Wahi platform. Successfully found my Canadian address and began valuation process. (Still no unit number though) | |
-| 14 | Wahi required additional property details including annual taxes and maintenance fees. Had to look up exact figures from recent documents. | |
-| 15 | Submitted all required information and received instant results: $659K estimate with range $593K-$725K. Fast but seemed low for 3-bedroom. | <img width="1290" height="2796" alt="IMG_3838" src="https://github.com/user-attachments/assets/c984e59b-1e4f-4348-a743-803430c610a6" /> |
+| 2 | Navigated to Masterkey homepage, which required pasting a Zillow link to proceed. Noted the dependency and decided to come back later due to potential limitations for non-Zillow properties. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/32e5a507-c8db-41b3-ab47-95bac2db6897" /> |
+| 3 (switch) | Searched "home valuation tools Canada" to find independent platforms supporting Canadian addresses, discovering Zolo as a free option. | <img width="1290" height="2796" alt="IMG_3832" src="https://github.com/user-attachments/assets/01d031e7-58a6-49f9-9ee5-efed44ed7e14" /> |
+| 4 | Entered address, property type, number of beds, and area into Zolo. Received an estimate over $3million, which seemed inflated. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/6396004e-ea88-49fd-b59b-1e060423d955" /> |
+| 5 | Compared Zolo estimate with similar properties on realtor.ca for validation. Found discrepancies up to $1million, raising skepticism about Zolo's accuracy and lack of methodology explanation. | ![](image2.png)|
+| 6 (switch) | Returned to Masterkey approach by navigating to Zillow.com to create a link. Prompted to choose between app and web; selected Safari for web interface. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/2214c772-084c-4a10-9d3a-e647bc6e74bd"/> |
+| 7 | Completed Zillow account signup quickly using Google integration, to access valuation or listing features. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/6874128b-f704-4b9a-9d93-947e75e9d5ec" /> |
+| 8 | Attempted to enter Toronto house address in Zillow's search. System showed inconsistency in handling Canadian properties, failing to locate exact address. | ![](image3.png)|
+| 9 (switch) | Googled "how to post Zillow listing" to find proper interface, as navigation was unclear for creating a listing. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/71f70cc0-7fce-481a-aa55-b51290933981" /> |
+| 10 | Google results led to Zillow's listing section. Discovered that only US addresses are supported - geographic limitation not communicated earlier. | ![](image5.png)|
+| 11 (switch) | Continued search for Canadian tools and navigated to Wahi platform, which appeared promising for local addresses. | ![](image-1.png)|
+| 12 | Clicked "Sell" option on Wahi front page, but had to scroll through multiple marketing screens promoting their Cashback Program before accessing valuation. | ![](image-2.png)|
+| 13 | Navigated to Wahi profile to initiate valuation workflow. | |
+| 14 | Inputted interior and exterior details, purchase date, annual property taxes, and maintenance fees—required digging up documents but felt relevant. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/0159b75d-636a-4716-b76e-6fef835ea8da" /> |
+| 15 | Received instant $1.1million estimate with range $1.0million-$1.3million. Felt low for 3-bedroom unit based on local market knowledge. | ![](image6.png) |
 
 ---
 
