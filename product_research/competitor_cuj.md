@@ -74,21 +74,21 @@ While the entire process took only 10 minutes and 11 seconds, this speed came at
 ## 💡 Recommendations
 
 **For Property Valuation Platforms (Product Improvements):**
-- Clearly communicate geographic limitations upfront (US vs Canada availability)
-- Improve Canadian address databases and coverage, especially for newer developments and developments in more rural areas
-- Add photo-based valuation enhancement to differentiate from basic estimates
-- Provide clearer explanations of valuation methodology
-- Offer confidence intervals and accuracy estimates rather than single-point estimates
-- Streamline onboarding and happy paths for buyers vs sellers
+- Clearly communicate geographic limitations upfront (US vs Canada availability).
+- Improve Canadian address databases and coverage, especially for newer developments and developments in more rural areas.
+- Add photo-based valuation enhancement to differentiate from basic estimates.
+- Provide clearer explanations of valuation methodology.
+- Offer confidence intervals and accuracy estimates rather than single-point estimates.
+- Streamline onboarding and happy paths for buyers vs sellers.
 
 **For Future Canadian Homeowners:**
-- Start with Canadian-specific platforms (Wahi, Zolo) rather than US-based tools
-- Have property tax and maintenance fee information readily available
-- Expect limitations with newer addresses or less-covered postal codes
-- Use multiple platforms and compare results for better accuracy assessment
-- Consider the speed vs accuracy trade-off – fast and simple estimates may lack nuance
-- Research recent comparable sales independently to validate automated estimates
-- Remember that different types of property (house, condo) require different factors for valuations
+- Start with Canadian-specific platforms (Wahi, Zolo) rather than US-based tools.
+- Have property tax and maintenance fee information readily available.
+- Expect limitations with newer addresses or less-covered postal codes.
+- Use multiple platforms and compare results for better accuracy assessment.
+- Consider the speed vs accuracy trade-off – fast and simple estimates may lack nuance.
+- Research recent comparable sales independently to validate automated estimates.
+- Remember that different types of property (house, condo) require different factors for valuations.
 
 ## Highlights & Lowlights Table
 
