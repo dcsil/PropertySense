@@ -11,7 +11,7 @@
 
 ## ⚡ TL;DR (Max 65 words)
 
-We tested multiple property valuation tools as Canadian homeowners seeking accurate home estimates. Tried Realtor.ca and Wahi (both failed address lookup). Tried Zillow but hit edge cases with weird listed prices and insufficient info. Then Zolo which gave an estimate $1million off from similar properties in the area. Fast but arbitrary results. No tools used photo data for enhanced accuracy.
+We tested multiple property valuation tools as Canadian homeowners seeking accurate home estimates. Started with Masterkey/Zillow but found hit geographical restrictions. Then Zolo which gave an estimate $1million off from similar properties in the area. Finally Wahi, which provided $1.1million estimate. Process took 10 minutes but prices seem low for 3 bedroom unit. No tools used photo data for enhanced accuracy.
 
 ## 🎯 Goal
 
@@ -19,8 +19,7 @@ As a **Canadian homeowner considering selling my 3-bedroom house**, I want to **
 
 ## 🧰 Tools Used
 
-- Realtor.ca
-- Zillow website
+- Masterkey/Zillow website
 - Google Search for Canadian property valuation options
 - Zolo property valuation platform
 - Wahi home valuation tool
@@ -33,7 +32,7 @@ As a **Canadian homeowner considering selling my 3-bedroom house**, I want to **
 Canadian homeowner with a 3-bedroom house in suburban Toronto, considering market timing for potential sale
 
 **Experience Level:**  
-Familiar with basic real estate websites like Realtor.ca, comfortable with online tools, no experience using valuation platforms
+Familiar with basic real estate websites like Realtor.ca, comfortable with using online tools, no experience using valuation platforms
 
 **Familiarity with Platform:**  
 Complete newcomer to automated valuation tools, discovered options through web search for "property valuation tools"
@@ -42,28 +41,35 @@ Complete newcomer to automated valuation tools, discovered options through web s
 
 My 5-minute journey through property valuation tools revealed the frustrating reality of getting accurate home estimates as a Canadian homeowner. What should have been a simple process turned into a series of geographic restrictions and platform limitations.
 
-**Starting with MasterKey and Geographic Roadblocks**  
-I began by searching for "property valuation tools" and found MasterKey, which immediately caught my attention with its promise of enhanced property analysis. However, their homepage required pasting a Zillow link to get started – an unusual approach that made me wonder about their independence from Zillow's ecosystem.
+**Starting with MasterKey and Platform Limitations**  
+I began by searching for "property valuation tools" and found Masterkey, which immediately caught my attention with its promise of enhanced property analysis in seconds. However, their homepage required pasting a Zillow link to get started – an unusual approach that made me wonder about their independence from Zillow's ecosystem, and ability to analyze property listed in other places. It also requires payment and the property to already exist on Zillow, so I decided to come back to this option later.
 
-**The Zillow Dead End**  
-Following MasterKey's instructions, I navigated to Zillow's website, where I was prompted to choose between their mobile app and web interface. I selected Safari and proceeded with account creation. The first major frustration emerged when I tried entering my Toronto condo address – Zillow couldn't locate Canadian properties in their system, which should have been obvious but wasn't clearly communicated upfront.
+**Pivoting to more independent valuation platforms**
+I searched specifically for "home valuation tools Canada" and discovered Zolo, which appeared to be a free Canadian-focused platform with no external dependencies. Instead of taking a Zillow link as input, it takes an address, property type, number of beds, and area. The estimate it gave me is over $3million. For comparison, I looked up similar surrounding properties in my area on realtor.ca since that's what I'm familiar with. Their listed prices are nowhere near this expensive, some off by $1million. So this, combined with Zolo's lack of transparency about why exactly my property is over 3 million, makes me skeptical of the accuracy of Zolo.
+![alt text](image1.png)
+![alt text](image2.png)
 
-Thinking I might need to list my property first, I searched for Zillow's listing functionality. Instead of clear posting options, I encountered marketing content pushing "Zillow Partner Agent" services. A quick Google search for "how to post Zillow listing" led me to their listing section, where I discovered that only U.S. addresses were supported. This geographic limitation wasted valuable time and created unnecessary frustration.
+**The Masterkey/Zillow Dead End**  
+I decided to come back to try Masterkey. Since Masterkey requires my property to exist as a listing on Zillow, I navigated to Zillow's website, where I was prompted to choose between their mobile app and web interface. I selected Safari and proceeded with account creation. The first major frustration emerged when I tried entering my Toronto house address. At first glance, Zillow seems to have Canadian properties in their system, but it's incredibly inconsistent, and it's not clear at all what addresses can be inputted.
+![alt text](image3.png)
 
-**Pivoting to Canadian Alternatives**  
-Realizing Zillow wouldn't work for Canadian properties, I searched specifically for "home valuation tools Canada" and discovered several local options. My first attempt was Zolo, which appeared to be a Canadian-focused platform, but unfortunately couldn't locate my specific address either – a common problem with newer condo developments or less-covered areas.
+Thinking there might be a different procedure, I Google searched for "how to post Zillow listing", and it took me to a different looking interface, where I discovered that only U.S. addresses were supported. This geographic limitation wasted valuable time and created unnecessary frustration.
+![alt text](image4.png)
+![alt text](image5.png)
 
-**Success with Wahi**  
-Finally, I found Wahi, which successfully processed my address and guided me through their valuation workflow. The platform required inputting annual property taxes and maintenance fees – information that felt relevant for condo valuations but required me to dig up recent documents.
+**Wahi is pushy but it works**  
+Then, I found Wahi, which looks promising and Canadian addresses seemed to work. But when I clicked the "Sell" option on their front page, I had to scroll through several screens of marketing content pushing me to sign up for Wahi's "Cashback Program".
+I eventually navigated to my Wahi profile to find the valuation function. It processed my address and guided me through their valuation workflow. The platform required inputting interior and exterior information, when my property was purchased, and annual property taxes and maintenance fees – information that felt relevant for house valuations but required me to dig up recent documents.
+![alt text](image6.png)
 
 **Results and Reality Check**  
-Wahi provided an estimate of $659,000 with a range from $593,000 to $725,000. While the process was smooth, the result felt low for my 3-bedroom unit. Based on my knowledge of local market conditions, this pricing seemed more appropriate for 1-2 bedroom units in the area rather than a 3-bedroom property.
+Wahi provided an estimate of $1.1million with a range from $1.0million to $1.3million. While the process was smooth, the result felt low for my 3-bedroom unit. Based on my knowledge of local market conditions, this pricing seems to be on the low end, and seemed more appropriate for 1-2 bedroom units in the area rather than a 3-bedroom property.
 
 **The Missing Piece: Visual Data**  
 Throughout this entire process, no platform offered photo-based valuation enhancement. Given that my unit has been renovated and has unique features that distinguish it from comparable units, the lack of visual analysis felt like a significant limitation in accuracy.
 
 **Time Efficiency vs. Accuracy Trade-off**  
-While the entire process took only 5 minutes and 11 seconds, this speed came at the cost of accuracy and detail. The rapid results made me question whether these tools can truly capture the nuances that affect property value, especially in diverse markets like Toronto condos.
+While the entire process took only 10 minutes and 11 seconds, this speed came at the cost of accuracy and detail. The rapid results made me question whether these tools can truly capture the nuances that affect property value, especially in diverse housing markets like Toronto.
 
 ## 💡 Recommendations
 
