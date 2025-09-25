@@ -1,6 +1,6 @@
 # A3 CUJ Runthrough + Demo
 
-**Team PropertyVision**
+**Team PropertySense**
 
 **Group Members:**
 - Sunny Kim – 100084121931
@@ -15,7 +15,7 @@ We tested multiple property valuation tools as Canadian homeowners seeking accur
 
 ## 🎯 Goal
 
-As a **Canadian homeowner considering selling my 3-bedroom house**, I want to **get an accurate current valuation of my property using available online tools**, so that I can **understand my home's market value and determine realistic pricing expectations before making selling decisions**.
+As a **Canadian homeowner considering selling my property**, I want to **get an accurate current valuation of my property using available online tools**, so that I can **understand my home's market value and determine realistic pricing expectations before making selling decisions**.
 
 ## 🧰 Tools Used
 
@@ -39,7 +39,7 @@ Complete newcomer to automated valuation tools, discovered options through web s
 
 ## 📘 Summary of Findings (Approx. 600 words)
 
-My 5-minute journey through property valuation tools revealed the frustrating reality of getting accurate home estimates as a Canadian homeowner. What should have been a simple process turned into a series of geographic restrictions and platform limitations.
+My 10-minute journey through property valuation tools revealed the frustrating reality of getting accurate home estimates as a Canadian homeowner. What should have been a simple process turned into a series of geographic restrictions and platform limitations.
 
 **Starting with MasterKey and Platform Limitations**  
 I began by searching for "property valuation tools" and found Masterkey, which immediately caught my attention with its promise of enhanced property analysis in seconds. However, their homepage required pasting a Zillow link to get started – an unusual approach that made me wonder about their independence from Zillow's ecosystem, and ability to analyze property listed in other places. It also requires payment and the property to already exist on Zillow, so I decided to come back to this option later.
