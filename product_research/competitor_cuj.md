@@ -94,35 +94,36 @@ While the entire process took only 10 minutes and 11 seconds, this speed came at
 
 | Task | Severity | Notes |
 |------|----------|-------|
-| Found MasterKey platform | Great | Clear landing page, easy to discover through search |
-| MasterKey requires Zillow link | Moderate | Unusual dependency, but instructions were clear |
-| Zillow signup process | Great | Smooth account creation, good mobile optimization |
-| Canadian address lookup failure | Severe | Wasted time, geographic limitation not communicated upfront |
-| Zillow listing attempt | Severe | Confusing navigation, partner agent marketing instead of listing tools |
+| Found MasterKey platform | Great | Clear landing page |  easy to discover through search |
+| MasterKey requires Zillow link | Moderate | Unusual dependency |  but instructions were clear |
+| Zillow signup process | Great | Smooth account creation |  good mobile optimization |
+| Canadian address lookup failure | Severe | Wasted time |  geographic limitation not communicated upfront |
+| Zillow listing attempt | Severe | Confusing navigation |  partner agent marketing instead of listing tools |
 | Google search for alternatives | Great | Quick discovery of Canadian-specific platforms |
-| Zolo address lookup failure | Severe | Second platform unable to find property, concerning pattern |
+| Zolo valuation estimate | Severe | Over $3M result seemed inflated |  $1M off from realtor.ca comps |  no transparency |
 | Wahi signup and address success | Great | Finally found working Canadian platform |
 | Property tax/fee data entry | Moderate | Required digging up documents but felt relevant for accuracy |
-| Wahi valuation results | Moderate | Fast results but seemed low for 3-bedroom unit |
+| Wahi valuation results | Moderate | Fast $1.1M estimate but seemed low for 3-bedroom unit |
 | No photo-based enhancement | Severe | Missing key differentiator for accurate modern valuations |
+
 
 ## CUJ Overview Table
 
 | Task | Time | Switches |
 |------|------|----------|
-| Google search for valuation tools | 1 min 30 sec | 0 |
-| Navigate to MasterKey and read requirements | 45 sec | 0 |
-| Go to Zillow and choose web interface | 40 sec | 1 |
-| Zillow account signup process | 1 min 15 sec | 0 |
-| Attempt Canadian address lookup | 1 min 45 sec | 0 |
-| Search for listing functionality | 1 min 20 sec | 0 |
-| Google "how to post Zillow listing" | 50 sec | 1 |
-| Discover US-only limitation | 35 sec | 0 |
-| Search "home valuation tools Canada" | 55 sec | 1 |
-| Try Zolo platform and address failure | 1 min 25 sec | 1 |
-| Navigate to Wahi platform | 40 sec | 1 |
-| Complete Wahi signup and property details | 1 min 40 sec | 0 |
-| Review $659K valuation results | 30 sec | 0 |
+| Google search for valuation tools | 1 min | 0 | 
+| Navigate to MasterKey and read requirements | 45 sec | 1 |
+| "Search ""home valuation tools Canada""" | 1 min | 1 |
+| Try Zolo platform and get inflated estimate | 1 min 30 sec | 0 |
+| Compare Zolo with realtor.ca | 1 min | 0 |
+| Return to Zillow and choose web interface | 40 sec | 1 |
+| Zillow account signup process | 1 min | 0 |
+| Attempt Canadian address lookup | 1 min 15 sec | 0 |
+| "Google ""how to post Zillow listing""" | 50 sec | 1 |
+| Discover US-only limitation | 30 sec | 0 |
+| Navigate to Wahi platform | 45 sec | 1 |
+| Complete Wahi signup and property details | 1 min 30 sec | 0 |
+| Review $1.1M valuation results | 30 sec | 0 |
 
 **Total Time:** 12 minutes  
 **Total Context Switches:** 5
@@ -132,7 +133,7 @@ While the entire process took only 10 minutes and 11 seconds, this speed came at
 | Step | Notes (What + Why) | Screenshot |
 |------|-------------------|------------|
 | 1 | Googled "property valuation tools" to find automated home estimate platforms. Found MasterKey among top results. | |
-| 2 | Navigated to Masterkey homepage, which required pasting a Zillow link to proceed. Noted the dependency and decided to come back later due to potential limitations for non-Zillow properties. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/32e5a507-c8db-41b3-ab47-95bac2db6897" /> |
+| 2 (switch) | Navigated to Masterkey homepage, which required pasting a Zillow link to proceed. Noted the dependency and decided to come back later due to potential limitations for non-Zillow properties. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/32e5a507-c8db-41b3-ab47-95bac2db6897" /> |
 | 3 (switch) | Searched "home valuation tools Canada" to find independent platforms supporting Canadian addresses, discovering Zolo as a free option. | <img width="1290" height="2796" alt="IMG_3832" src="https://github.com/user-attachments/assets/01d031e7-58a6-49f9-9ee5-efed44ed7e14" /> |
 | 4 | Entered address, property type, number of beds, and area into Zolo. Received an estimate over $3million, which seemed inflated. | <img width="1290" height="2796" alt="image" src="https://github.com/user-attachments/assets/6396004e-ea88-49fd-b59b-1e060423d955" /> |
 | 5 | Compared Zolo estimate with similar properties on realtor.ca for validation. Found discrepancies up to $1million, raising skepticism about Zolo's accuracy and lack of methodology explanation. | ![](image2.png)|
