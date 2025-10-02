@@ -57,7 +57,7 @@
   1. After data input and photo analysis, user selects "Generate Report"
   2. System aggregates the generated valuation range, flaw detections, regional comparisons, etc. into a single report.
   3. Report includes visualizations like charts and annotated images. 
-  4. User exports the generated report as PDF.
+  4. User exports the generated report as PDF or private link.
 - **UI/UX demonstration**:
 ![](./cuj_assess.jpg)
 
@@ -74,31 +74,29 @@
    - Explanations of factors influencing the valuation (e.g., square footage, location, age) are provided.
      
 2. **Photo Upload & AI-Powered Flaw Detection**
-   - Users can upload property photos via web or mobile app.
+   - Users can upload or capture photos on the mobile app.
    - The system provides prompts for required angles/areas (e.g., roof, kitchen, basement, exterior).
-   - Computer vision models analyze photos for property flaws (e.g., cracks, mold, roof wear).
-   - Detected flaws are highlighted with annotations and severity scoring.
+   - AI models analyze uploaded photos to detect flaws (e.g., cracks, roof wear, water damage).
+   - Detected flaws are annotated directly on images with markers and severity scores.
    - Updated valuation incorporates flaw detection results, with optional repair cost estimates.
 
-3. **Report Generation & Sharing**
+3. **Report Generation**
    - Users can generate a comprehensive property report combining valuation, flaw detection, and regional comparisons.
-   - Reports include annotated photos, charts, and condition grades.
-   - Users can customize reports (add notes, highlight sections).
-   - Reports can be exported as PDF or shared via a secure link.
-   - Users can invite collaborators (e.g., brokers, inspectors) with role-based permissions.
+   - Reports include visualizations such as annotated images, charts, and condition summaries.
+   - Users can export reports as PDFs for offline use.
+   - Users can generate a secure, private link to share reports externally.
 
-4. **Broker / Inspector Collaboration**
-   - Brokers can log in and review client-generated reports.
-   - Brokers can override valuation estimates, add notes, and adjust flaw severity.
-   - System recalculates valuations based on broker input.
-   - Inspectors can prioritize flaws by risk level for on-site verification.
-   - Inspectors can mark flaws as “verified” or add inspection notes.
-   - Reports automatically sync updates between client, broker, and inspector views.
+4. **Iterative Valuation Updates**
+   - Users can open previously saved property sessions from a dashboard.
+   - Users can replace or add new photos for specific property areas.
+   - The system re-processes the updated photo set to detect changes in flaws or conditions.
+   - A revised condition grade and updated valuation range are displayed.
+   - The system highlights differences between the new and previous valuations (e.g., new flaws, improvements).
      
-5. **Authentication & User Management**
-   - Secure login for homeowners, buyers, brokers, and inspectors.
-   - Role-based access to restrict editing/sharing permissions.
-   - Support for account linking (e.g., broker-client relationships).
+5. **Deployment and User Authentication**
+   - iOS mobile app available through the App Store.
+   - Users can register for an account and log in with email and password.
+   - Authentication system ensures secure access to saved property sessions.
 
 ---
 
@@ -111,28 +109,26 @@
    - Explanations of factors influencing the valuation (e.g., square footage, location, age) are provided.
      
 2. **Photo Upload & AI-Powered Flaw Detection**
-   - Users can upload property photos via web or mobile app.
+   - Users can upload or capture photos on the mobile app.
    - The system provides prompts for required angles/areas (e.g., roof, kitchen, basement, exterior).
-   - Computer vision models analyze photos for property flaws (e.g., cracks, mold, roof wear).
-   - Detected flaws are highlighted with annotations and severity scoring.
+   - AI models analyze uploaded photos to detect flaws (e.g., cracks, roof wear, water damage).
+   - Detected flaws are annotated directly on images with markers and severity scores.
    - Updated valuation incorporates flaw detection results, with optional repair cost estimates.
 
-3. **Report Generation & Sharing**
+3. **Report Generation**
    - Users can generate a comprehensive property report combining valuation, flaw detection, and regional comparisons.
-   - Reports include annotated photos, charts, and condition grades.
-   - Users can customize reports (add notes, highlight sections).
-   - Reports can be exported as PDF or shared via a secure link.
-   - Users can invite collaborators (e.g., brokers, inspectors) with role-based permissions.
+   - Reports include visualizations such as annotated images, charts, and condition summaries.
+   - Users can export reports as PDFs for offline use.
+   - Users can generate a secure, private link to share reports externally.
 
-4. **Broker / Inspector Collaboration**
-   - Brokers can log in and review client-generated reports.
-   - Brokers can override valuation estimates, add notes, and adjust flaw severity.
-   - System recalculates valuations based on broker input.
-   - Inspectors can prioritize flaws by risk level for on-site verification.
-   - Inspectors can mark flaws as “verified” or add inspection notes.
-   - Reports automatically sync updates between client, broker, and inspector views.
+4. **Iterative Valuation Updates**
+   - Users can open previously saved property sessions from a dashboard.
+   - Users can replace or add new photos for specific property areas.
+   - The system re-processes the updated photo set to detect changes in flaws or conditions.
+   - A revised condition grade and updated valuation range are displayed.
+   - The system highlights differences between the new and previous valuations (e.g., new flaws, improvements).
      
-5. **Authentication & User Management**
-   - Secure login for homeowners, buyers, brokers, and inspectors.
-   - Role-based access to restrict editing/sharing permissions.
-   - Support for account linking (e.g., broker-client relationships).
+5. **Deployment and User Authentication**
+   - iOS mobile app available through the App Store.
+   - Users can register for an account and log in with email and password.
+   - Authentication system ensures secure access to saved property sessions.
