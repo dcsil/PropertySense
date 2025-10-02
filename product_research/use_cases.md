@@ -13,7 +13,7 @@
 ### CUJ 1: Property Valuation with Basic Data Input  
 - **Scenario**: The user enters property details like address and specs to get an initial valuation estimate.  
 - **Journey**:  
-  1. User logs into the app via web or iOS.  
+  1. User logs into the app on iOS.  
   2. User inputs address, beds/baths/area, age, and other data fields.  
   3. System pulls regional data from APIs and computes a baseline valuation range.  
   4. User reviews the estimate with explanations of factors considered.
@@ -62,6 +62,7 @@
 ![](./cuj_assess.jpg)
 
 ---
+
 
 
 ## Functional Requirements
