@@ -14,13 +14,12 @@
 - **Scenario**: The user enters property details like address and specs to get an initial valuation estimate.  
 - **Journey**:  
   1. User logs into the app via web or iOS.  
-  2. User inputs address, beds/baths/sqft, age, and other public data fields.  
+  2. User inputs address, beds/baths/area, age, and other data fields.  
   3. System pulls regional data from APIs and computes a baseline valuation range.  
   4. User reviews the estimate with explanations of factors considered.
   5. Option to proceed to photo upload for enhanced accuracy.
 - **UI/UX demonstration**:
-![](./use_cases_asset/CUJ1_1.png)
-![](./use_cases_asset/CUJ1_2.png)
+![](./cuj_input.jpg)
 
 ---
 
@@ -28,54 +27,42 @@
 - **Scenario**: The user uploads photos of key property areas for AI-based inspection.  
 - **Journey**:  
   1. From the valuation dashboard, user selects "Add Photos" and follows prompts for angles (e.g., roof, interior).  
-  2. App processes images using CV models to detect flaws like cracks or wear.  
+  2. App processes images using AI models to detect flaws like cracks or wear.  
   3. System generates a condition grade and risk report, highlighting issues.  
   4. User views annotated photos with flaw markers and severity scores.  
   5. Updated valuation incorporates flaw insights, optionally with repair cost estimates.  
 - **UI/UX demonstration**:
-![](./use_cases_asset/CUJ2_1.png)
-![](./use_cases_asset/CUJ2_2.png)
+![](./cuj_photo.jpg)
+![](./cuj_assess.jpg)
 
 ---
 
-### CUJ 3: Comprehensive Report Generation and Sharing  
+### CUJ 3: Iterative Valuation Update with New Photos
+- **Scenario**: The user wants to refine an existing valuation by adding or replacing photos after initial input.
+- **Journey**:
+   1. User opens a saved property session from the app dashboard.
+   2. Selects "Update Photos" and follows prompts to capture/re-upload specific angles.
+   3. System re-processes the new images with AI models to detect changes in flaws or conditions.
+   4. Updated condition grade and risk report generates, incorporating the revisions.
+   5. Revised valuation range displays with highlights of what changed from the previous estimate.
+- **UI/UX demonstration**:
+![](./cuj_dashboard.jpg)
+![](./cuj_update.jpg)
+
+---
+
+### CUJ 4: Comprehensive Report Generation and Sharing  
 - **Scenario**: The user compiles valuation and inspection data into a report.  
 - **Journey**:  
   1. After data input and photo analysis, user selects "Generate Report"
   2. System aggregates the generated valuation range, flaw detections, regional comparisons, etc. into a single report.
-  3. Report includes visualizations like charts and annotated images.  
-  4. User customizes (e.g., add notes) and exports as PDF or shares via link.  
-  5. Option to invite collaborators (e.g., broker) for feedback.  
+  3. Report includes visualizations like charts and annotated images. 
+  4. User exports the generated report as PDF.
 - **UI/UX demonstration**:
-![](./use_cases_asset/CUJ3_1.png)
+![](./cuj_assess.jpg)
 
 ---
 
-### CUJ 4: Broker Review and Adjustment  
-- **Scenario**: A broker reviews a client-generated report and makes professional adjustments.  
-- **Journey**:  
-  1. Broker receives shared report link and logs in.  
-  2. Views AI-generated valuation and flaw detections.  
-  3. Manually overrides estimates or adds notes based on expertise.  
-  4. System recalculates updated valuation.  
-  5. Broker shares revised report back with client.  
-- **UI/UX demonstration**:
-![](./use_cases_asset/CUJ4_1.png)
-
----
-
-### CUJ 5: Inspector Flaw Prioritization  
-- **Scenario**: An inspector uses the app to prioritize flaws for on-site verification.  
-- **Journey**:  
-  1. Inspector uploads or accesses client photos.  
-  2. AI analyzes for high-risk flaws (e.g., structural issues).  
-  3. System ranks flaws by severity and suggests inspection order.  
-  4. Inspector marks items as verified or adds field notes.  
-  5. Updated report syncs with valuation adjustments.  
-- **UI/UX demonstration**:
-![](./use_cases_asset/CUJ5_1.png)
-
----
 
 ## Functional Requirements
 
