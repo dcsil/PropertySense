@@ -74,3 +74,77 @@
   5. Updated report syncs with valuation adjustments.  
 - **UI/UX demonstration**:
 ![](./use_cases_asset/CUJ5_1.png)
+
+---
+
+## Functional Requirements
+
+1. **Property Valuation & Data Integration**
+   - Users can input basic property information (address, square footage, beds/baths, age, etc.).
+   - The system retrieves regional market data via third-party APIs (e.g., MLS, census, municipal data).
+   - The system generates an initial valuation range based on public data and comparable listings.
+   - Explanations of factors influencing the valuation (e.g., square footage, location, age) are provided.
+     
+2. **Photo Upload & AI-Powered Flaw Detection**
+   - Users can upload property photos via web or mobile app.
+   - The system provides prompts for required angles/areas (e.g., roof, kitchen, basement, exterior).
+   - Computer vision models analyze photos for property flaws (e.g., cracks, mold, roof wear).
+   - Detected flaws are highlighted with annotations and severity scoring.
+   - Updated valuation incorporates flaw detection results, with optional repair cost estimates.
+
+3. **Report Generation & Sharing**
+   - Users can generate a comprehensive property report combining valuation, flaw detection, and regional comparisons.
+   - Reports include annotated photos, charts, and condition grades.
+   - Users can customize reports (add notes, highlight sections).
+   - Reports can be exported as PDF or shared via a secure link.
+   - Users can invite collaborators (e.g., brokers, inspectors) with role-based permissions.
+
+4. **Broker / Inspector Collaboration**
+   - Brokers can log in and review client-generated reports.
+   - Brokers can override valuation estimates, add notes, and adjust flaw severity.
+   - System recalculates valuations based on broker input.
+   - Inspectors can prioritize flaws by risk level for on-site verification.
+   - Inspectors can mark flaws as “verified” or add inspection notes.
+   - Reports automatically sync updates between client, broker, and inspector views.
+     
+5. **Authentication & User Management**
+   - Secure login for homeowners, buyers, brokers, and inspectors.
+   - Role-based access to restrict editing/sharing permissions.
+   - Support for account linking (e.g., broker-client relationships).
+
+---
+
+## Non-Functional Requirements
+
+1. **Property Valuation & Data Integration**
+   - Users can input basic property information (address, square footage, beds/baths, age, etc.).
+   - The system retrieves regional market data via third-party APIs (e.g., MLS, census, municipal data).
+   - The system generates an initial valuation range based on public data and comparable listings.
+   - Explanations of factors influencing the valuation (e.g., square footage, location, age) are provided.
+     
+2. **Photo Upload & AI-Powered Flaw Detection**
+   - Users can upload property photos via web or mobile app.
+   - The system provides prompts for required angles/areas (e.g., roof, kitchen, basement, exterior).
+   - Computer vision models analyze photos for property flaws (e.g., cracks, mold, roof wear).
+   - Detected flaws are highlighted with annotations and severity scoring.
+   - Updated valuation incorporates flaw detection results, with optional repair cost estimates.
+
+3. **Report Generation & Sharing**
+   - Users can generate a comprehensive property report combining valuation, flaw detection, and regional comparisons.
+   - Reports include annotated photos, charts, and condition grades.
+   - Users can customize reports (add notes, highlight sections).
+   - Reports can be exported as PDF or shared via a secure link.
+   - Users can invite collaborators (e.g., brokers, inspectors) with role-based permissions.
+
+4. **Broker / Inspector Collaboration**
+   - Brokers can log in and review client-generated reports.
+   - Brokers can override valuation estimates, add notes, and adjust flaw severity.
+   - System recalculates valuations based on broker input.
+   - Inspectors can prioritize flaws by risk level for on-site verification.
+   - Inspectors can mark flaws as “verified” or add inspection notes.
+   - Reports automatically sync updates between client, broker, and inspector views.
+     
+5. **Authentication & User Management**
+   - Secure login for homeowners, buyers, brokers, and inspectors.
+   - Role-based access to restrict editing/sharing permissions.
+   - Support for account linking (e.g., broker-client relationships).
