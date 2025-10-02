@@ -103,32 +103,30 @@
 ## Non-Functional Requirements
 
 1. **Property Valuation & Data Integration**
-   - Users can input basic property information (address, square footage, beds/baths, age, etc.).
-   - The system retrieves regional market data via third-party APIs (e.g., MLS, census, municipal data).
-   - The system generates an initial valuation range based on public data and comparable listings.
-   - Explanations of factors influencing the valuation (e.g., square footage, location, age) are provided.
+   - Valuation calculations complete in ≤3 seconds for standard inputs.
+   - Forms and valuation results must render correctly on iOS mobile screens.
+   - System must handle API failures gracefully, displaying fallback messages without crashing.
      
 2. **Photo Upload & AI-Powered Flaw Detection**
-   - Users can upload or capture photos on the mobile app.
-   - The system provides prompts for required angles/areas (e.g., roof, kitchen, basement, exterior).
-   - AI models analyze uploaded photos to detect flaws (e.g., cracks, roof wear, water damage).
-   - Detected flaws are annotated directly on images with markers and severity scores.
-   - Updated valuation incorporates flaw detection results, with optional repair cost estimates.
+   - Photo upload must complete in ≤5 seconds per image on standard Wi-Fi.
+   - AI analysis results returned in ≤10 seconds per batch of 5–10 images.
+   - Annotated images must display consistently across devices and screen sizes.
 
 3. **Report Generation**
-   - Users can generate a comprehensive property report combining valuation, flaw detection, and regional comparisons.
-   - Reports include visualizations such as annotated images, charts, and condition summaries.
-   - Users can export reports as PDFs for offline use.
-   - Users can generate a secure, private link to share reports externally.
-
+   - Report generation (PDF or private link) must complete in ≤5 seconds.
+   - Exported PDFs should be <10MB, optimized for sharing and mobile viewing.
+   - Visualizations (charts, annotated images) must maintain consistent design system styling.
+     
 4. **Iterative Valuation Updates**
-   - Users can open previously saved property sessions from a dashboard.
-   - Users can replace or add new photos for specific property areas.
-   - The system re-processes the updated photo set to detect changes in flaws or conditions.
-   - A revised condition grade and updated valuation range are displayed.
-   - The system highlights differences between the new and previous valuations (e.g., new flaws, improvements).
+   - Dashboard and saved sessions must load in ≤2 seconds.
+   - Updates with new photos must process and return revised valuation in ≤8 seconds.
+   - Differences between old and new valuations must be highlighted clearly (ex. colour-coded).
+   - System must handle multiple concurrent session updates without conflicts or errors.
      
 5. **Deployment and User Authentication**
-   - iOS mobile app available through the App Store.
-   - Users can register for an account and log in with email and password.
-   - Authentication system ensures secure access to saved property sessions.
+   - Authentication requests must complete in ≤2 seconds.
+   - Auto-logout after 30 minutes of inactivity.
+   - iOS mobile app must be fully compatible with the latest iOS version and responsive to various screen sizes.
+   - System must support secure session persistence across app restarts and network changes.
+  
+---
