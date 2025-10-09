@@ -1,8 +1,20 @@
-import 'dart:async';
+/*
+ * OBJECT DETECTION APP - MVP
+ * 
+ * Features:
+ * - PRIMARY: Live camera object detection (on physical devices)
+ * - BACKUP: Static image detection (when no camera available)
+ * - Uses YOLO TFLite model for 80 COCO object classes
+ * 
+ * Architecture:
+ * 1. Load TFLite model from assets
+ * 2. Initialize camera (if available) or fallback to image mode
+ * 3. Process frames/images through YOLO model
+ * 4. Display bounding boxes with labels and confidence scores
+ */
+
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -43,24 +55,46 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
+  // Camera and model components
   CameraController? _controller;
   Interpreter? _interpreter;
-  List<dynamic>? _recognitions;
+  
+  // Detection state
+  List<Map<String, dynamic>>? _detections;
   bool _isDetecting = false;
   bool _isModelLoaded = false;
-  File? _selectedImage;
-  Uint8List? _imageBytes;
-  final ImagePicker _picker = ImagePicker();
+  bool _isCameraAvailable = false;
+  
+  // Backup image mode (only when no camera)
+  Uint8List? _testImageBytes;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
     _loadModel();
+    _initializeCamera();
   }
 
+  /// Load TFLite model from assets
+  Future<void> _loadModel() async {
+    try {
+      _interpreter = await Interpreter.fromAsset('assets/1.tflite');
+      setState(() => _isModelLoaded = true);
+      print('✓ Model loaded successfully');
+    } catch (e) {
+      print('✗ Error loading model: $e');
+    }
+  }
+
+  /// Initialize camera for live detection (primary mode)
   Future<void> _initializeCamera() async {
-    if (widget.cameras.isNotEmpty) {
+    if (widget.cameras.isEmpty) {
+      print('No cameras available - image mode only');
+      setState(() => _isCameraAvailable = false);
+      return;
+    }
+
       try {
         _controller = CameraController(
           widget.cameras.first,
@@ -69,169 +103,222 @@ class _CameraScreenState extends State<CameraScreen> {
         );
         
         await _controller!.initialize();
-        _controller!.startImageStream(_processImage);
-        setState(() {});
-      } catch (e) {
-        print('Camera initialization failed: $e');
-        // Camera failed to initialize, but we'll continue with mock data
-        setState(() {});
-      }
-    } else {
-      print('No cameras available - running in simulator mode');
-      // No cameras available (simulator), but we'll continue with mock data
-      setState(() {});
-    }
-  }
-
-  Future<void> _loadModel() async {
-    try {
-      final modelPath = 'assets/1.tflite';
-      _interpreter = await Interpreter.fromAsset(modelPath);
-      setState(() {
-        _isModelLoaded = true;
-      });
+      
+      // Start live detection stream
+      _controller!.startImageStream(_processCameraFrame);
+      
+      setState(() => _isCameraAvailable = true);
+      print('✓ Camera initialized - live detection active');
     } catch (e) {
-      print('Error loading model: $e');
+      print('✗ Camera failed: $e');
+      setState(() => _isCameraAvailable = false);
     }
   }
 
-  Future<void> _processImage(CameraImage image) async {
+  /// Process each camera frame for live object detection
+  Future<void> _processCameraFrame(CameraImage cameraImage) async {
+    // Skip if model not ready or already processing
     if (_interpreter == null || _isDetecting) return;
     
     _isDetecting = true;
     
     try {
-      // Convert camera image to the format expected by the model
-      final input = _convertImageToInput(image);
+      // Get model input requirements
+      final inputShape = _interpreter!.getInputTensor(0).shape;
+      final inputHeight = inputShape[1];
+      final inputWidth = inputShape[2];
+      // print('inputShape: $inputShape');    // [1, 320, 320, 3]
+      
+      // Convert camera image to RGB (handles both iOS BGRA and Android YUV420)
+      final img.Image? rgbImage = _convertYUV420ToImage(cameraImage);
+      if (rgbImage == null) {
+        _isDetecting = false;
+        return;
+      }
+      // print('rgbImage: $rgbImage');       // Image(480, 640, uint8, 3)
+      
+      // Resize to model input size
+      final resizedImage = img.copyResize(rgbImage, 
+        width: inputWidth, 
+        height: inputHeight
+      );
+      
+      // Convert to Float32List normalized [0-1] and reshape to [1, 320, 320, 3]
+      final inputBytes = _imageToFloat32List(resizedImage, inputHeight, inputWidth);
+      final input = inputBytes.reshape([1, inputHeight, inputWidth, 3]);
+      
+      // Prepare output buffer [1, 6300, 85]
+      final outputShape = _interpreter!.getOutputTensor(0).shape;
+      final output = List.generate(
+        outputShape[0],
+        (i) => List.generate(
+          outputShape[1],
+          (j) => List.filled(outputShape[2], 0.0),
+        ),
+      );
       
       // Run inference
-      final output = List.filled(1 * 10 * 4, 0.0).reshape([1, 10, 4]) as List<List<double>>;
       _interpreter!.run(input, output);
       
-      // Process results (simplified for demo)
-      setState(() {
-        _recognitions = _processOutput(output);
-      });
+      // Process results and update UI
+      final detections = _processYOLOOutput(output);
+      if (mounted) {
+        setState(() => _detections = detections);
+      }
     } catch (e) {
-      print('Error processing image: $e');
+      print('Frame processing error: $e');
     } finally {
       _isDetecting = false;
     }
   }
 
-  List<List<double>> _convertImageToInput(CameraImage image) {
-    // Simplified conversion - in practice, you'd need proper preprocessing
-    // based on your specific model requirements
-    final input = List.filled(1 * 224 * 224 * 3, 0.0).reshape([1, 224, 224, 3]) as List<List<double>>;
-    return input;
+  /// Convert camera image to RGB (handles both iOS BGRA and Android YUV420)
+  img.Image? _convertYUV420ToImage(CameraImage cameraImage) {
+    try {
+      // iOS: BGRA format (single plane)
+      if (cameraImage.planes.length == 1) {
+        return _convertBGRA(cameraImage);
+      }
+      
+      // Android: YUV420 format (3 planes)
+      if (cameraImage.planes.length == 3) {
+        return _convertYUV420(cameraImage);
+      }
+      
+      print('Unsupported camera format: ${cameraImage.planes.length} planes');
+      return null;
+      
+    } catch (e, stackTrace) {
+      print('Camera conversion error: $e');
+      print('Stack trace: $stackTrace');
+      return null;
+    }
   }
 
-  List<Map<String, dynamic>> _processOutput(List<List<double>> output) {
-    // Simplified output processing - adjust based on your model's output format
-    final List<Map<String, dynamic>> recognitions = [];
+  /// Convert BGRA (iOS single plane) to RGB
+  img.Image _convertBGRA(CameraImage cameraImage) {
+    final plane = cameraImage.planes[0];
+    final bytes = plane.bytes;
+    final int width = cameraImage.width;
+    final int height = cameraImage.height;
     
-    // Mock detection for demonstration
-    if (math.Random().nextDouble() > 0.7) {
-      recognitions.add({
-        'label': 'Object',
-        'confidence': 0.8,
-        'bbox': [0.2, 0.3, 0.6, 0.7], // [x, y, width, height] normalized
-      });
+    final img.Image image = img.Image(width: width, height: height);
+    
+    final int bytesPerPixel = plane.bytesPerPixel ?? 4;
+    final int bytesPerRow = plane.bytesPerRow;
+    
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final int pixelIndex = y * bytesPerRow + x * bytesPerPixel;
+        
+        // Ensure we have enough bytes for R, G, B
+        if (pixelIndex + 2 >= bytes.length) continue;
+        
+        // BGRA format: B=0, G=1, R=2, A=3
+        final int b = bytes[pixelIndex];
+        final int g = bytes[pixelIndex + 1];
+        final int r = bytes[pixelIndex + 2];
+        
+        image.setPixelRgb(x, y, r, g, b);
+      }
     }
     
-    return recognitions;
+    return image;
   }
 
-  Future<void> _pickAndDetectImage() async {
+  /// Convert YUV420 (Android 3 planes) to RGB
+  img.Image _convertYUV420(CameraImage cameraImage) {
+    final int width = cameraImage.width;
+    final int height = cameraImage.height;
+    final int uvRowStride = cameraImage.planes[1].bytesPerRow;
+    final int uvPixelStride = cameraImage.planes[1].bytesPerPixel ?? 1;
+    
+    final img.Image image = img.Image(width: width, height: height);
+    
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final int uvIndex = (uvPixelStride * (x / 2).floor()) + 
+                           (uvRowStride * (y / 2).floor());
+        final int index = y * width + x;
+        
+        // Get YUV values with bounds checking
+        if (index >= cameraImage.planes[0].bytes.length) continue;
+        if (uvIndex >= cameraImage.planes[1].bytes.length) continue;
+        if (uvIndex >= cameraImage.planes[2].bytes.length) continue;
+        
+        final int yp = cameraImage.planes[0].bytes[index];
+        final int up = cameraImage.planes[1].bytes[uvIndex];
+        final int vp = cameraImage.planes[2].bytes[uvIndex];
+        
+        // YUV to RGB conversion (exact formula from Stack Overflow)
+        int r = (yp + (vp * 1436 / 1024 - 179)).round().clamp(0, 255);
+        int g = (yp - (up * 46549 / 131072) + 44 - (vp * 93604 / 131072) + 91).round().clamp(0, 255);
+        int b = (yp + (up * 1814 / 1024 - 227)).round().clamp(0, 255);
+        
+        image.setPixelRgb(x, y, r, g, b);
+      }
+    }
+    
+    return image;
+  }
+
+  // ==================== BACKUP IMAGE MODE ====================
+  // These methods are only used when camera is unavailable
+  
+  /// Pick image from gallery (backup mode only)
+  Future<void> _pickImageFromGallery() async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
+      final XFile? pickedFile = await _imagePicker.pickImage(
         source: ImageSource.gallery,
       );
       
       if (pickedFile != null) {
-        final File imageFile = File(pickedFile.path);
-        final Uint8List imageBytes = await imageFile.readAsBytes();
-        
-        setState(() {
-          _selectedImage = imageFile;
-          _imageBytes = imageBytes;
-        });
-        
-        await _runDetectionOnImage(imageBytes);
+        final bytes = await File(pickedFile.path).readAsBytes();
+        setState(() => _testImageBytes = bytes);
+        await _detectObjectsInStaticImage(bytes);
       }
     } catch (e) {
       print('Error picking image: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
     }
   }
 
-  Future<void> _loadAndDetectTestImage() async {
+  /// Load test image from assets (backup mode only)
+  Future<void> _loadTestImage() async {
     try {
-      // Try to load a test image from assets
-      final ByteData data = await rootBundle.load('assets/test_image.jpg');
-      final Uint8List bytes = data.buffer.asUint8List();
-      
-      setState(() {
-        _imageBytes = bytes;
-        _selectedImage = null; // Clear file reference when using asset
-      });
-      
-      await _runDetectionOnImage(bytes);
+      final data = await rootBundle.load('assets/test_image.jpg');
+      final bytes = data.buffer.asUint8List();
+      setState(() => _testImageBytes = bytes);
+      await _detectObjectsInStaticImage(bytes);
     } catch (e) {
-      print('Error loading test image: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: No test image found. Please add test_image.jpg to assets folder or pick an image.')),
-      );
+      print('Error: No test image found in assets folder');
     }
   }
 
-  Future<void> _runDetectionOnImage(Uint8List imageBytes) async {
-    if (_interpreter == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Model not loaded yet')),
-      );
-      return;
-    }
+  /// Run detection on a static image (backup mode only)
+  Future<void> _detectObjectsInStaticImage(Uint8List imageBytes) async {
+    if (_interpreter == null) return;
 
-    setState(() {
-      _isDetecting = true;
-    });
+    setState(() => _isDetecting = true);
 
     try {
-      // Decode the image
-      img.Image? image = img.decodeImage(imageBytes);
-      if (image == null) {
-        throw Exception('Failed to decode image');
-      }
+      // Decode image
+      final image = img.decodeImage(imageBytes);
+      if (image == null) throw Exception('Failed to decode image');
 
-      // Get model input shape
+      // Get model requirements and resize
       final inputShape = _interpreter!.getInputTensor(0).shape;
-      final inputType = _interpreter!.getInputTensor(0).type;
-      
-      print('Model input shape: $inputShape');
-      print('Model input type: $inputType');
-      
-      // Resize image to model input size (assuming [1, height, width, 3])
-      final inputHeight = inputShape[1];
-      final inputWidth = inputShape[2];
-      
-      img.Image resizedImage = img.copyResize(image, 
-        width: inputWidth, 
-        height: inputHeight
+      final resizedImage = img.copyResize(image, 
+        width: inputShape[2], 
+        height: inputShape[1]
       );
 
-      // Convert image to input tensor
-      var input = _imageToByteListFloat32(resizedImage, inputHeight, inputWidth);
+      // Convert to model input format and reshape to [1, height, width, 3]
+      final inputBytes = _imageToFloat32List(resizedImage, inputShape[1], inputShape[2]);
+      final input = inputBytes.reshape([1, inputShape[1], inputShape[2], 3]);
 
-      // Get output shape
+      // Prepare output buffer
       final outputShape = _interpreter!.getOutputTensor(0).shape;
-      print('Model output shape: $outputShape');
-      
-      // Prepare output buffer based on actual model output
-      // For YOLO models with output [1, 6300, 85], create proper 3D structure
-      var output = List.generate(
+      final output = List.generate(
         outputShape[0],
         (i) => List.generate(
           outputShape[1],
@@ -242,158 +329,114 @@ class _CameraScreenState extends State<CameraScreen> {
       // Run inference
       _interpreter!.run(input, output);
 
-      // Process and display results
-      setState(() {
-        _recognitions = _processModelOutput(output);
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Detection complete! Found ${_recognitions?.length ?? 0} objects'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      print('Error running detection: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Detection error: $e')),
-      );
+      // Update UI with results
+      setState(() => _detections = _processYOLOOutput(output));
       
-      // // Show mock detection as fallback
-      // setState(() {
-      //   _recognitions = [
-      //     {
-      //       'label': 'Demo Object',
-      //       'confidence': 0.85,
-      //       'bbox': [0.2, 0.3, 0.6, 0.7],
-      //     }
-      //   ];
-      // });
+      print('Found ${_detections?.length ?? 0} objects');
+    } catch (e) {
+      print('Detection error: $e');
     } finally {
-      setState(() {
-        _isDetecting = false;
-      });
+      setState(() => _isDetecting = false);
     }
   }
 
-  Float32List _imageToByteListFloat32(img.Image image, int inputHeight, int inputWidth) {
-    var convertedBytes = Float32List(1 * inputHeight * inputWidth * 3);
-    var buffer = Float32List.view(convertedBytes.buffer);
+  /// Convert Image to Float32List normalized [0-1]
+  Float32List _imageToFloat32List(img.Image image, int height, int width) {
+    final buffer = Float32List(1 * height * width * 3);
     int pixelIndex = 0;
 
-    for (var i = 0; i < inputHeight; i++) {
-      for (var j = 0; j < inputWidth; j++) {
-        var pixel = image.getPixel(j, i);
-        // Normalize to [0, 1] or [-1, 1] depending on your model
+    for (int h = 0; h < height; h++) {
+      for (int w = 0; w < width; w++) {
+        final pixel = image.getPixel(w, h);
         buffer[pixelIndex++] = pixel.r / 255.0;
         buffer[pixelIndex++] = pixel.g / 255.0;
         buffer[pixelIndex++] = pixel.b / 255.0;
       }
     }
     
-    return convertedBytes;
+    return buffer;
   }
 
-  List<Map<String, dynamic>> _processModelOutput(List<dynamic> output) {
-    final List<Map<String, dynamic>> recognitions = [];
+  // ==================== YOLO OUTPUT PROCESSING ====================
+  
+  /// Process YOLO model output [1, 6300, 85] into detections
+  /// Format: 4 bbox (cx,cy,w,h) + 1 objectness + 80 COCO classes
+  List<Map<String, dynamic>> _processYOLOOutput(List<dynamic> output) {
+    final List<Map<String, dynamic>> detections = [];
     
-    // YOLO output format: [1, 6300, 85]
-    // 85 = 4 bbox coords (x, y, w, h) + 1 objectness + 80 class scores
+    if (output.isEmpty) return detections;
+    
+    const confidenceThreshold = 0.5;
+    const maxDetections = 10;
+    
+    // COCO dataset class names
+    const classNames = [
+      'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
+      'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
+      'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
+      'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
+      'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+      'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
+      'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
+      'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse',
+      'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
+      'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
+    ];
     
     try {
-      print('Processing output: ${output.length} batches');
+      final batch = output[0] as List;
       
-      if (output.isEmpty) return recognitions;
-      
-      final detections = output[0] as List; // Get first batch
-      print('Number of detections: ${detections.length}');
-      
-      const confidenceThreshold = 0.5; // Minimum confidence to show
-      const iouThreshold = 0.4; // For NMS (Non-Maximum Suppression)
-      
-      // COCO dataset class names (80 classes) - shortened list for common objects
-      const classNames = [
-        'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
-        'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
-        'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
-        'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-        'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-        'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-        'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
-        'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse',
-        'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
-        'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
-      ];
-      
-      // Process each detection
-      for (var i = 0; i < detections.length; i++) {
-        final detection = detections[i] as List;
+      for (var detection in batch) {
+        if ((detection as List).length < 85) continue;
         
-        if (detection.length < 85) continue;
-        
-        // Get bounding box (assuming center format: cx, cy, w, h)
+        // Extract bbox (center format)
         final cx = detection[0] as double;
         final cy = detection[1] as double;
         final w = detection[2] as double;
         final h = detection[3] as double;
-        
-        // Get objectness score
         final objectness = detection[4] as double;
         
-        // Find class with highest score
-        var maxClassScore = 0.0;
-        var maxClassIndex = 0;
+        // Find best class
+        double maxScore = 0.0;
+        int maxIndex = 0;
         
-        for (var j = 5; j < detection.length; j++) {
-          final classScore = detection[j] as double;
-          if (classScore > maxClassScore) {
-            maxClassScore = classScore;
-            maxClassIndex = j - 5; // Subtract 5 to get class index
+        for (int i = 5; i < detection.length; i++) {
+          final score = detection[i] as double;
+          if (score > maxScore) {
+            maxScore = score;
+            maxIndex = i - 5;
           }
         }
         
-        // Calculate final confidence
-        final confidence = objectness * maxClassScore;
-        
-        // Filter by confidence threshold
+        // Calculate confidence and filter
+        final confidence = objectness * maxScore;
         if (confidence < confidenceThreshold) continue;
         
-        // Convert from center format to corner format and normalize
-        // Assuming coordinates are already normalized (0-1)
-        final x = (cx - w / 2).clamp(0.0, 1.0);
-        final y = (cy - h / 2).clamp(0.0, 1.0);
-        final width = w.clamp(0.0, 1.0);
-        final height = h.clamp(0.0, 1.0);
-        
-        // Get class name
-        final className = maxClassIndex < classNames.length 
-            ? classNames[maxClassIndex] 
-            : 'Object $maxClassIndex';
-        
-        recognitions.add({
-          'label': className,
+        // Convert to corner format [x, y, width, height] normalized
+        detections.add({
+          'label': maxIndex < classNames.length ? classNames[maxIndex] : 'Object',
           'confidence': confidence,
-          'bbox': [x, y, width, height],
+          'bbox': [
+            (cx - w / 2).clamp(0.0, 1.0),
+            (cy - h / 2).clamp(0.0, 1.0),
+            w.clamp(0.0, 1.0),
+            h.clamp(0.0, 1.0),
+          ],
         });
       }
       
-      print('Found ${recognitions.length} objects above confidence threshold');
-      
-      // Sort by confidence (highest first)
-      recognitions.sort((a, b) => 
+      // Sort by confidence and limit
+      detections.sort((a, b) => 
         (b['confidence'] as double).compareTo(a['confidence'] as double));
       
-      // Limit to top 10 detections
-      if (recognitions.length > 10) {
-        return recognitions.sublist(0, 10);
-      }
-      
+      return detections.length > maxDetections 
+          ? detections.sublist(0, maxDetections) 
+          : detections;
+          
     } catch (e) {
-      print('Error processing output: $e');
-      print('Stack trace: ${StackTrace.current}');
+      print('YOLO processing error: $e');
+      return [];
     }
-    
-    return recognitions;
   }
 
   @override
@@ -403,17 +446,52 @@ class _CameraScreenState extends State<CameraScreen> {
     super.dispose();
   }
 
+  // ==================== UI ====================
+
   @override
   Widget build(BuildContext context) {
+    // Show loading while model initializes
     if (!_isModelLoaded) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading model...'),
+            ],
+          ),
         ),
       );
     }
 
-    if (_controller == null || !_controller!.value.isInitialized) {
+    // PRIMARY MODE: Live camera detection
+    if (_isCameraAvailable && _controller?.value.isInitialized == true) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            // Camera preview
+            Positioned.fill(
+              child: CameraPreview(_controller!),
+            ),
+            // Detection overlay
+            if (_detections != null)
+              ..._detections!.map((d) => _buildDetectionBox(d)),
+            // Status indicator
+            Positioned(
+              top: 50,
+              left: 16,
+              right: 16,
+              child: _buildDetectionStatus(),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // BACKUP MODE: Static image detection (no camera)
       return Scaffold(
         appBar: AppBar(
           title: const Text('Object Detection'),
@@ -421,229 +499,200 @@ class _CameraScreenState extends State<CameraScreen> {
           foregroundColor: Colors.white,
         ),
         body: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (_imageBytes == null) ...[
-                  const Icon(Icons.image, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Camera not available',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Test object detection with images',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ] else ...[
-                  // Display selected image with detections
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Stack(
-                        children: [
-                          Image.memory(_imageBytes!),
-                          if (_recognitions != null)
-                            ..._recognitions!.map((recognition) => _buildBoundingBoxForImage(recognition, constraints)),
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  if (_recognitions != null && _recognitions!.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Detected Objects:',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          ..._recognitions!.map((r) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(
-                              '${r['label']}: ${(r['confidence'] * 100).toStringAsFixed(1)}%',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          )),
-                        ],
-                      ),
-                    ),
-                ],
-                const SizedBox(height: 24),
-                if (_isDetecting)
-                  const CircularProgressIndicator()
-                else ...[
-                  ElevatedButton.icon(
-                    onPressed: _pickAndDetectImage,
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Pick Image from Gallery'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: _loadAndDetectTestImage,
-                    icon: const Icon(Icons.image_search),
-                    label: const Text('Use Test Image'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                  ),
-                  if (_imageBytes != null) ...[
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _imageBytes = null;
-                          _selectedImage = null;
-                          _recognitions = null;
-                        });
-                      },
-                      icon: const Icon(Icons.clear),
-                      label: const Text('Clear'),
-                    ),
-                  ],
-                ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_testImageBytes == null) ...[
+                // No image selected
+                const Icon(Icons.no_photography, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text(
+                'Camera not available',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                  'Use images for testing',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: _pickImageFromGallery,
+                  icon: const Icon(Icons.photo_library),
+                  label: const Text('Pick from Gallery'),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _loadTestImage,
+                  icon: const Icon(Icons.image),
+                  label: const Text('Use Test Image'),
+                ),
+              ] else ...[
+                // Show image with detections
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Stack(
+                      children: [
+                        Image.memory(_testImageBytes!),
+                        if (_detections != null)
+                          ..._detections!.map((d) => _buildDetectionBoxForImage(d, constraints)),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildDetectionsList(),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () => setState(() {
+                    _testImageBytes = null;
+                    _detections = null;
+                  }),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Try Another Image'),
+                ),
               ],
-            ),
+            ],
+          ),
           ),
         ),
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Object Detection'),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+  /// Build detection status indicator
+  Widget _buildDetectionStatus() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(20),
       ),
-      body: Stack(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Camera preview or placeholder
-          Positioned.fill(
-            child: _controller != null && _controller!.value.isInitialized
-                ? AspectRatio(
-                    aspectRatio: _controller!.value.aspectRatio,
-                    child: CameraPreview(_controller!),
-                  )
-                : Container(
-                    color: Colors.black,
-                    child: const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.camera_alt, size: 64, color: Colors.white),
-                          SizedBox(height: 16),
+          Icon(
+            _detections != null && _detections!.isNotEmpty
+                ? Icons.check_circle
+                : Icons.search,
+            color: Colors.white,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
                           Text(
-                            'Camera Preview',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
+            _detections != null && _detections!.isNotEmpty
+                ? '${_detections!.length} objects detected'
+                : 'Scanning...',
+            style: const TextStyle(color: Colors.white, fontSize: 14),
                           ),
                         ],
                       ),
-                    ),
-                  ),
+    );
+  }
+
+  /// Build detection results list
+  Widget _buildDetectionsList() {
+    if (_detections == null || _detections!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Detected:',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
-          // Bounding boxes overlay
-          if (_recognitions != null)
-            ..._recognitions!.map((recognition) => _buildBoundingBox(recognition)),
+          const SizedBox(height: 8),
+          ..._detections!.map((d) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              '• ${d['label']}: ${(d['confidence'] * 100).toStringAsFixed(0)}%',
+              style: const TextStyle(color: Colors.white),
+            ),
+          )),
         ],
       ),
     );
   }
 
-  Widget _buildBoundingBox(Map<String, dynamic> recognition) {
-    final bbox = recognition['bbox'] as List<double>;
-    final label = recognition['label'] as String;
-    final confidence = recognition['confidence'] as double;
+  /// Build bounding box for live camera detection
+  Widget _buildDetectionBox(Map<String, dynamic> detection) {
+    final bbox = detection['bbox'] as List<double>;
+    final label = detection['label'] as String;
+    final confidence = detection['confidence'] as double;
+    
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     
     return Positioned(
-      left: bbox[0] * MediaQuery.of(context).size.width,
-      top: bbox[1] * MediaQuery.of(context).size.height,
-      width: bbox[2] * MediaQuery.of(context).size.width,
-      height: bbox[3] * MediaQuery.of(context).size.height,
+      left: bbox[0] * screenWidth,
+      top: bbox[1] * screenHeight,
+      width: bbox[2] * screenWidth,
+      height: bbox[3] * screenHeight,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.red, width: 2),
+          border: Border.all(color: Colors.greenAccent, width: 2),
         ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              left: 0,
+        child: Align(
+          alignment: Alignment.topLeft,
               child: Container(
-                color: Colors.red,
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            color: Colors.greenAccent,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 child: Text(
                   '$label ${(confidence * 100).toInt()}%',
                   style: const TextStyle(
-                    color: Colors.white,
+                color: Colors.black,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildBoundingBoxForImage(Map<String, dynamic> recognition, BoxConstraints constraints) {
-    final bbox = recognition['bbox'] as List<double>;
-    final label = recognition['label'] as String;
-    final confidence = recognition['confidence'] as double;
+  /// Build bounding box for static image detection
+  Widget _buildDetectionBoxForImage(Map<String, dynamic> detection, BoxConstraints constraints) {
+    final bbox = detection['bbox'] as List<double>;
+    final label = detection['label'] as String;
+    final confidence = detection['confidence'] as double;
     
-    // Validate bbox values to prevent Infinity
-    final left = bbox[0].isFinite ? bbox[0] : 0.0;
-    final top = bbox[1].isFinite ? bbox[1] : 0.0;
-    final width = bbox[2].isFinite ? bbox[2] : 0.0;
-    final height = bbox[3].isFinite ? bbox[3] : 0.0;
-    
-    // For static images, we need to calculate based on image dimensions
     return Positioned(
-      left: left * constraints.maxWidth,
-      top: top * constraints.maxHeight,
-      width: width * constraints.maxWidth,
-      height: height * constraints.maxHeight,
+      left: bbox[0] * constraints.maxWidth,
+      top: bbox[1] * constraints.maxHeight,
+      width: bbox[2] * constraints.maxWidth,
+      height: bbox[3] * constraints.maxHeight,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.red, width: 3),
+          border: Border.all(color: Colors.redAccent, width: 3),
         ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              left: 0,
-              child: Container(
-                color: Colors.red,
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                child: Text(
-                  '$label ${(confidence * 100).toInt()}%',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: Container(
+            color: Colors.redAccent,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            child: Text(
+              '$label ${(confidence * 100).toInt()}%',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
