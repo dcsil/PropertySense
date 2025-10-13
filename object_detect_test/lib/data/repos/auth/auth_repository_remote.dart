@@ -10,6 +10,7 @@ class AuthRepositoryRemote implements AuthRepository {
   final FirebaseAuth firebaseAuth;
   AuthRepositoryRemote({required this.firebaseAuth});
 
+  @override
   Stream<Result<Auth?>> authStateChanges() {
     return firebaseAuth
         .authStateChanges()
@@ -23,6 +24,6 @@ class AuthRepositoryRemote implements AuthRepository {
       return Failure('Could not map firebase user to domain Auth: creationTime is null');
     }
 
-    return Success(Auth(UID: user.uid, createdDate: created));
+    return Success(Auth(userID: user.uid, createdDate: created));
   }
 }

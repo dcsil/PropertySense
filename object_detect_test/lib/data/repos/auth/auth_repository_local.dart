@@ -13,6 +13,7 @@ class AuthRepositoryLocal implements AuthRepository {
     int emulatorPort = 9099,
   }) : _firebaseAuth = firebaseAuth {_firebaseAuth.useAuthEmulator(emulatorHost, emulatorPort);}
 
+  @override
   Stream<Result<Auth?>> authStateChanges() {
     return _firebaseAuth
         .authStateChanges()
@@ -26,6 +27,6 @@ class AuthRepositoryLocal implements AuthRepository {
       return Failure('Could not map firebase user to domain Auth: creationTime is null');
     }
 
-    return Success(Auth(UID: user.uid, createdDate: created));
+    return Success(Auth(userID: user.uid, createdDate: created));
   }
 }
