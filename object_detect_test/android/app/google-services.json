@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "521542213835",
+    "project_id": "propertysense-544a4",
+    "storage_bucket": "propertysense-544a4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:521542213835:android:34560368054bf4879ebb4e",
+        "android_client_info": {
+          "package_name": "com.example.object_detect_test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBunJKHT-ruvVVsI3EEoEgZJynH9bzNVm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
