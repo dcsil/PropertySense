@@ -9,16 +9,18 @@ on:
 jobs:
   publish-ios:
     runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: ./object_detect_test
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'
-          channel: 'stable'
+          channel: stable
           cache: true
       
       - name: Install Flutter dependencies
@@ -131,9 +133,10 @@ jobs:
         run: |
           echo "Build uploaded! Check App Store Connect for processing status."
           echo "You can monitor at: https://appstoreconnect.apple.com"
+
       
       - name: Upload IPA as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: appstore-release-ipa
           path: build/ios/ipa/*.ipa
