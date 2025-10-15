@@ -39,13 +39,14 @@
 ---
 
 ### CUJ 3: Contractor Workflow and Job Completion
-- **Scenario**: A verified contractor accepts a job, performs the repair, and marks it as completed.
+- **Scenario**: A verified contractor accepts a repair job, completes the work, and both parties confirm the completion through the app.
 - **Journey**:
-   1. Contractor logs into their app dashboard and views available repair jobs on a map.
-   2. Contractor accepts a job that fits their location and price preference.
-   3. The system confirms the booking and notifies the homeowner.
-   4. After completing the repair, the contractor uploads an image of the fixed area.
-   5. Job is marked complete, and homeowner can rate the service.
+   1. From the map view, the contractor browses nearby available repair listings created by homeowners.
+   2. Contractor opens a listing, reviews the AI-generated issue summary and estimated cost, and decides to accept the job or submit a customized offer if their estimate differs.
+   3. Once the homeowner confirms the booking, the contractor completes the assigned repair job.
+   4. The contractor opens the job and marks it as “Completed by Me” and the system sends a notification to the homeowner to review the finished job.
+   5. The homeowner reviews the work and sets the listing as “Completed,” triggering automatic payment processing.
+   6. Both parties receive a receipt, and the option to rate each other.
 - **UI/UX demonstration**:
 <!--![](./cuj_dashboard.jpg)-->
 <!--![](./cuj_update.jpg)-->
