@@ -25,6 +25,12 @@ jobs:
       
       - name: Install Flutter dependencies
         run: flutter pub get
+        
+      - name: Update CocoaPods repo
+        run: |
+          cd ios
+          pod repo update
+          cd ..
       
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
