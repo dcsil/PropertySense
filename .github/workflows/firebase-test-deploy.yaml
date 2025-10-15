@@ -84,40 +84,8 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
       
-      - name: Create ExportOptions.plist for App Store
-        env:
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          BUNDLE_ID: ${{ secrets.IOS_BUNDLE_ID }}
-          PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_APPSTORE_PROVISIONING_PROFILE_NAME }}
-        run: |
-          cat > ios/ExportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>teamID</key>
-              <string>$TEAM_ID</string>
-              <key>uploadSymbols</key>
-              <true/>
-              <key>uploadBitcode</key>
-              <false/>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>provisioningProfiles</key>
-              <dict>
-                  <key>$BUNDLE_ID</key>
-                  <string>$PROVISIONING_PROFILE_NAME</string>
-              </dict>
-          </dict>
-          </plist>
-          EOF
-      
       - name: Build IPA for App Store
-        run: |
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist
+        run: flutter build ipa --release
       
       - name: Upload to App Store Connect using Transporter
         env:
