@@ -30,8 +30,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: appstore-release-ipa-latest
-          path: object_detect_test/build/ios/ipa/PropertySense/ipa
+          path: object_detect_test/build/ios/ipa/PropertySense.ipa
           retention-days: 30
+
+      - name: Setup App Store Connect API Key
+        env:
+          API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          mkdir -p ~/private_keys
+          echo "$API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_$API_KEY_ID.p8
+          chmod 600 ~/private_keys/AuthKey_$API_KEY_ID.p8
 
       - name: Upload to App Store Connect using altool
         env:
