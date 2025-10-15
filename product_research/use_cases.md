@@ -2,55 +2,55 @@
 
 ## Jobs To Be Done (JTBD)
 
-1. **As a Canadian homeowner preparing to sell**, I want to obtain an accurate property valuation that incorporates visual inspections of my home's condition, so that I can set realistic pricing expectations and identify potential flaws that could affect market value.  
-2. **As a Canadian looking to buy a new house**, I want to use AI-assisted photo analysis to generate preliminary risk reports, and help me evaluate the conditions of a new house, so I can attend more house-showings efficiently.  
-3. **As a real estate broker**, I want to quickly analyze client-submitted photos for property risks and flaws, so that I can provide informed advice on repairs and valuations to facilitate faster sales.
+1. **As a homeowner noticing a problem in my house**, I want to take photos of the issue and get an AI-generated diagnosis with a repair cost estimate, so I can understand the problem before contacting a professional.  
+2. **As a homeowner needing quick repair service**, I want to receive offers from verified contractors nearby who can fix the issue for the estimated price, so I can book a repair easily and confidently.  
+3. **As a licensed contractor or repair professional**, I want to view available nearby repair requests with AI-generated summaries and cost ranges, so I can choose jobs that fit my skills and schedule.
 
 ---
 
 ## Critical User Journeys (CUJs)
 
-### CUJ 1: Property Valuation with Basic Data Input  
-- **Scenario**: The user enters property details like address and specs to get an initial valuation estimate.  
+### CUJ 1: AI-Powered Issue Detection and Cost Estimation  
+- **Scenario**: The homeowner captures and uploads photos of a home issue to receive an instant AI analysis.
 - **Journey**:  
   1. User logs into the app on iOS.  
-  2. User inputs address, beds/baths/area, age, and other data fields.  
-  3. System pulls regional data from APIs and computes a baseline valuation range.  
-  4. User reviews the estimate with explanations of factors considered.
-  5. Option to proceed to photo upload for enhanced accuracy.
+  2. User selects “New Repair Estimate” and uploads or captures photos of the issue (e.g., leaky pipe, cracked wall).  
+  3. AI model analyzes the image to identify issue type and severity.  
+  4. The system provides an estimated repair cost range, description of the detected issue, and possible causes.
+  5. User can save or proceed to “Find a Contractor.”
 - **UI/UX demonstration**:
-![](./cuj_input.jpg)
+<!--![](./cuj_input.jpg)-->
 
 ---
 
-### CUJ 2: Photo Upload and Flaw Detection  
-- **Scenario**: The user uploads photos of key property areas for AI-based inspection.  
+### CUJ 2: Contractor Matching and Job Posting  
+- **Scenario**: The homeowner wants to connect with verified contractors to fix the identified issue.  
 - **Journey**:  
-  1. From the valuation dashboard, user selects "Add Photos" and follows prompts for angles (e.g., roof, interior).  
-  2. App processes images using AI models to detect flaws like cracks or wear.  
-  3. System generates a condition grade and risk report, highlighting issues.  
-  4. User views annotated photos with flaw markers and severity scores.  
-  5. Updated valuation incorporates flaw insights, optionally with repair cost estimates.  
+  1. From the AI results page, user selects “Find a Contractor.”  
+  2. System automatically creates a repair job listing with photos, issue summary, and estimated budget.  
+  3. Verified contractors nearby receive the job request on their app.  
+  4. Contractors can review details, propose time slots, and accept the job.  
+  5. Homeowner receives offers, compares profiles, and confirms a booking.  
 - **UI/UX demonstration**:
-![](./cuj_photo.jpg)
-![](./cuj_assess.jpg)
+<!--![](./cuj_photo.jpg)-->
+<!--![](./cuj_assess.jpg)-->
 
 ---
 
-### CUJ 3: Iterative Valuation Update with New Photos
-- **Scenario**: The user wants to refine an existing valuation by adding or replacing photos after initial input.
+### CUJ 3: Contractor Workflow and Job Completion
+- **Scenario**: A verified contractor accepts a job, performs the repair, and marks it as completed.
 - **Journey**:
-   1. User opens a saved property session from the app dashboard.
-   2. Selects "Update Photos" and follows prompts to capture/re-upload specific angles.
-   3. System re-processes the new images with AI models to detect changes in flaws or conditions.
-   4. Updated condition grade and risk report generates, incorporating the revisions.
-   5. Revised valuation range displays with highlights of what changed from the previous estimate.
+   1. Contractor logs into their app dashboard and views available repair jobs on a map.
+   2. Contractor accepts a job that fits their location and price preference.
+   3. The system confirms the booking and notifies the homeowner.
+   4. After completing the repair, the contractor uploads an image of the fixed area.
+   5. Job is marked complete, and homeowner can rate the service.
 - **UI/UX demonstration**:
-![](./cuj_dashboard.jpg)
-![](./cuj_update.jpg)
+<!--![](./cuj_dashboard.jpg)-->
+<!--![](./cuj_update.jpg)-->
 
 ---
-
+<!--
 ### CUJ 4: Comprehensive Report Generation and Sharing  
 - **Scenario**: The user compiles valuation and inspection data into a report.  
 - **Journey**:  
@@ -60,7 +60,7 @@
   4. User exports the generated report as PDF or private link.
 - **UI/UX demonstration**:
 ![](./cuj_assess.jpg)
-
+-->
 ---
 
 
