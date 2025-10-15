@@ -1,0 +1,32 @@
+name: Build and distribute
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: build
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: ./object_detect_test
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: cedvdb/action-flutter-build-ios@v1
+        with:
+          working-directory: ./object_detect_test
+          # always use --export-options-plist=ios/GithubActionsExportOptions.plist
+          build-cmd: flutter build ipa --release --export-options-plist=ios/GithubActionsExportOptions.plist
+          certificate-base64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          certificate-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          provisioning-profile-base64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          keychain-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+
+      - name: Archive IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-ipa
+          path: build/ios/ipa/*.ipa
