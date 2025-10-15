@@ -28,9 +28,10 @@
 - **Journey**:  
   1. From the AI results page, user selects “Find a Contractor.”  
   2. System automatically creates a repair job listing with photos, issue summary, and estimated budget.  
-  3. Verified contractors nearby receive the job request on their app.  
-  4. Contractors can review details, propose time slots, and accept the job.  
-  5. Homeowner receives offers, compares profiles, and confirms a booking.  
+  3. Verified contractors nearby receive the job request on their app, along with the AI’s estimate and image set.  
+  4. Contractors review the photos, verify the issue, and submit their own offers, either confirming or adjusting the suggested price.
+  5. Homeowner receives multiple offers with contractor profiles, ratings, and proposed prices.
+  6. Homeowner compares offers and confirms a booking directly through the app.  
 - **UI/UX demonstration**:
 <!--![](./cuj_photo.jpg)-->
 <!--![](./cuj_assess.jpg)-->
