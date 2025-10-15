@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBunJKHT-ruvVVsI3EEoEgZJynH9bzNVm8',
-    appId: '1:521542213835:android:34560368054bf4879ebb4e',
+    appId: '1:521542213835:android:9a9c5b72932cad389ebb4e',
     messagingSenderId: '521542213835',
     projectId: 'propertysense-544a4',
     storageBucket: 'propertysense-544a4.firebasestorage.app',
@@ -60,11 +60,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBo6oAbYNGTK3_KK_wI6_RfriCB_F6y-Cs',
-    appId: '1:521542213835:ios:baa7c6bc230946699ebb4e',
+    appId: '1:521542213835:ios:158701237178efce9ebb4e',
     messagingSenderId: '521542213835',
     projectId: 'propertysense-544a4',
     storageBucket: 'propertysense-544a4.firebasestorage.app',
-    iosBundleId: 'com.example.objectDetectTest',
+    iosBundleId: 'com.sunnyk.propertysense',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'propertysense-544a4.firebasestorage.app',
     measurementId: 'G-TE26NNTTBN',
   );
+
 }

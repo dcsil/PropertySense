@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.objectDetectTest</string>
+	<string>com.sunnyk.propertysense</string>
 	<key>PROJECT_ID</key>
 	<string>propertysense-544a4</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:521542213835:ios:baa7c6bc230946699ebb4e</string>
+	<string>1:521542213835:ios:158701237178efce9ebb4e</string>
 </dict>
 </plist>
