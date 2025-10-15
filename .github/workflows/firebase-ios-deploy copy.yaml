@@ -2,8 +2,9 @@ name: Build and distribute
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - "v*.*.*" # Triggers on version tags like v1.0.0
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,8 +26,40 @@ jobs:
           provisioning-profile-base64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
           keychain-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
 
-      - name: Archive IPA
+      - name: Upload IPA as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-ipa
-          path: build/ios/ipa/*.ipa
+          name: appstore-release-ipa-latest
+          path: build/ios/ipa/PropertySense.ipa
+          retention-days: 30
+
+      - name: Setup App Store Connect API Key
+        env:
+          API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          mkdir -p ~/private_keys
+          echo "$API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_$API_KEY_ID.p8
+          chmod 600 ~/private_keys/AuthKey_$API_KEY_ID.p8
+
+      - name: Upload to App Store Connect using Transporter
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          # Transporter uses the API key from the private_keys folder
+          xcrun iTMSTransporter -m upload \
+            -f build/ios/ipa/*.ipa \
+            -k ~/private_keys/AuthKey_$API_KEY_ID.p8 \
+            -i $API_KEY_ID \
+            -u $API_ISSUER_ID \
+            -t Signiant
+
+      - name: Wait for Processing (Optional)
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          echo "Build uploaded! Check App Store Connect for processing status."
+          echo "You can monitor at: https://appstoreconnect.apple.com"
