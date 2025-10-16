@@ -18,8 +18,8 @@ jobs:
           channel: 'stable'  # Specify Flutter channel
           cache: true        # Enable caching for faster runs
       
-      - name: Install dependencies
-        run: flutter pub get
+      # - name: Install dependencies
+      #   run: flutter pub get
       
       - name: Run unit tests
         run: flutter test
