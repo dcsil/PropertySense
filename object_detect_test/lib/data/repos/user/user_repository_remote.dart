@@ -5,13 +5,15 @@ import 'package:object_detect_test/domain/models/user_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 
 class UserRepositoryRemote implements UserRepository {
-  final FirebaseFirestore firestore;
-  final AuthRepository authRepo;
-  UserRepositoryRemote({required this.firestore, required this.authRepo});
+  final FirebaseFirestore _firestore;
+  final AuthRepository _authRepo;
+  UserRepositoryRemote({required FirebaseFirestore firestore, required AuthRepository authRepo})
+      : _firestore = firestore,
+        _authRepo = authRepo;
 
   @override
   Stream<Result<User?>> userStateChanges() {
-    return authRepo.authStateChanges().asyncMap((authResult) async {
+    return _authRepo.authStateChanges().asyncMap((authResult) async {
       return switch (authResult) {
         Success(value: final auth) when auth == null => Success<User?>(null),
 
@@ -26,7 +28,7 @@ class UserRepositoryRemote implements UserRepository {
 
   Future<Result<User?>> _fetchUser(Auth auth) async {
     try {
-      final doc = await firestore.collection('users').doc(auth.userID).get();
+      final doc = await _firestore.collection('users').doc(auth.userID).get();
 
       if (!doc.exists) {
         return Success(null);
