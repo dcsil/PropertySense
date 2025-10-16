@@ -2,55 +2,61 @@
 
 ## Jobs To Be Done (JTBD)
 
-1. **As a Canadian homeowner preparing to sell**, I want to obtain an accurate property valuation that incorporates visual inspections of my home's condition, so that I can set realistic pricing expectations and identify potential flaws that could affect market value.  
-2. **As a Canadian looking to buy a new house**, I want to use AI-assisted photo analysis to generate preliminary risk reports, and help me evaluate the conditions of a new house, so I can attend more house-showings efficiently.  
-3. **As a real estate broker**, I want to quickly analyze client-submitted photos for property risks and flaws, so that I can provide informed advice on repairs and valuations to facilitate faster sales.
+1. **As a homeowner noticing a problem in my house**, I want to take photos of the issue and get an AI-generated diagnosis with a repair cost estimate, so I can understand the problem before contacting a professional.  
+2. **As a homeowner needing quick repair service**, I want to receive offers from verified contractors nearby who can fix the issue for the estimated price, so I can book a repair easily and confidently.  
+3. **As a licensed contractor or repair professional**, I want to view available nearby repair requests with AI-generated summaries and cost ranges, so I can choose jobs that fit my skills and schedule.
 
 ---
 
 ## Critical User Journeys (CUJs)
 
-### CUJ 1: Property Valuation with Basic Data Input  
-- **Scenario**: The user enters property details like address and specs to get an initial valuation estimate.  
+### CUJ 1: AI-Powered Issue Detection and Cost Estimation  
+- **Scenario**: The homeowner captures and uploads photos of a home issue to receive an instant AI analysis.
 - **Journey**:  
   1. User logs into the app on iOS.  
-  2. User inputs address, beds/baths/area, age, and other data fields.  
-  3. System pulls regional data from APIs and computes a baseline valuation range.  
-  4. User reviews the estimate with explanations of factors considered.
-  5. Option to proceed to photo upload for enhanced accuracy.
+  2. User selects “New Repair Estimate” and uploads or captures photos of the issue (e.g., leaky pipe, cracked wall).  
+  3. AI model analyzes the image to identify issue type and severity.  
+  4. The system provides an estimated repair cost range, description of the detected issue, and possible causes.
+  5. User can save or proceed to “Find a Contractor.”
 - **UI/UX demonstration**:
-![](./cuj_input.jpg)
+![](./cuj_title.jpeg)
+![](./cuj_pic.jpeg)
+![](./cuj_analysis.jpeg)
+
 
 ---
 
-### CUJ 2: Photo Upload and Flaw Detection  
-- **Scenario**: The user uploads photos of key property areas for AI-based inspection.  
+### CUJ 2: Contractor Matching and Job Posting  
+- **Scenario**: The homeowner wants to connect with verified contractors to fix the identified issue.  
 - **Journey**:  
-  1. From the valuation dashboard, user selects "Add Photos" and follows prompts for angles (e.g., roof, interior).  
-  2. App processes images using AI models to detect flaws like cracks or wear.  
-  3. System generates a condition grade and risk report, highlighting issues.  
-  4. User views annotated photos with flaw markers and severity scores.  
-  5. Updated valuation incorporates flaw insights, optionally with repair cost estimates.  
+  1. From the AI results page, user selects “Find a Contractor.”  
+  2. System automatically creates a repair job listing with photos, issue summary, and estimated budget.  
+  3. Verified contractors nearby receive the job request on their app, along with the AI’s estimate and image set.  
+  4. Contractors review the photos, verify the issue, and submit their own offers, either confirming or adjusting the suggested price.
+  5. Homeowner receives multiple offers with contractor profiles, ratings, and proposed prices.
+  6. Homeowner compares offers and confirms a booking directly through the app.  
 - **UI/UX demonstration**:
-![](./cuj_photo.jpg)
-![](./cuj_assess.jpg)
+![](./cuj_find.jpeg)-->
+![](./cuj_contractor.jpeg)-->
+![](./cuj_compare.jpeg)-->
 
 ---
 
-### CUJ 3: Iterative Valuation Update with New Photos
-- **Scenario**: The user wants to refine an existing valuation by adding or replacing photos after initial input.
+### CUJ 3: Contractor Workflow and Job Completion
+- **Scenario**: A verified contractor accepts a repair job, completes the work, and both parties confirm the completion through the app.
 - **Journey**:
-   1. User opens a saved property session from the app dashboard.
-   2. Selects "Update Photos" and follows prompts to capture/re-upload specific angles.
-   3. System re-processes the new images with AI models to detect changes in flaws or conditions.
-   4. Updated condition grade and risk report generates, incorporating the revisions.
-   5. Revised valuation range displays with highlights of what changed from the previous estimate.
+   1. From the map view, the contractor browses nearby available repair listings created by homeowners.
+   2. Contractor opens a listing, reviews the AI-generated issue summary and estimated cost, and decides to accept the job or submit a customized offer if their estimate differs.
+   3. Once the homeowner confirms the booking, the contractor completes the assigned repair job.
+   4. The contractor opens the job and marks it as “Completed by Me” and the system sends a notification to the homeowner to review the finished job.
+   5. The homeowner reviews the work and sets the listing as “Completed,” triggering automatic payment processing.
+   6. Both parties receive a receipt, and the option to rate each other.
 - **UI/UX demonstration**:
-![](./cuj_dashboard.jpg)
-![](./cuj_update.jpg)
+![](./cuj_contractor.jpeg)-->
+![](./cuj_map.jpeg)-->
 
 ---
-
+<!--
 ### CUJ 4: Comprehensive Report Generation and Sharing  
 - **Scenario**: The user compiles valuation and inspection data into a report.  
 - **Journey**:  
@@ -60,68 +66,73 @@
   4. User exports the generated report as PDF or private link.
 - **UI/UX demonstration**:
 ![](./cuj_assess.jpg)
-
+-->
 ---
 
 
 
 ## Functional Requirements
 
-1. **Property Valuation & Data Integration**
-   - Users can input basic property information (address, square footage, beds/baths, age, etc.).
-   - The system retrieves regional market data via third-party APIs (e.g., MLS, census, municipal data).
-   - The system generates an initial valuation range based on public data and comparable listings.
-   - Explanations of factors influencing the valuation (e.g., square footage, location, age) are provided.
+1. **AI-Powered Issue Detection & Cost Estimation**
+   - Users can upload or capture photos of home issues (e.g., leaks, cracks, wiring).
+   - The system analyzes the images using AI to identify issue type, severity, and likely cause.
+   - The system generates a repair cost estimate range based on the detected issue type and local market data.
+   - Users can view a visual breakdown of detected areas and confidence levels.
+   - Users can save the analysis or proceed to “Find a Contractor.”
      
-2. **Photo Upload & AI-Powered Flaw Detection**
-   - Users can upload or capture photos on the mobile app.
-   - The system provides prompts for required angles/areas (e.g., roof, kitchen, basement, exterior).
-   - AI models analyze uploaded photos to detect flaws (e.g., cracks, roof wear, water damage).
-   - Detected flaws are annotated directly on images with markers and severity scores.
-   - Updated valuation incorporates flaw detection results, with optional repair cost estimates.
+2. **Contractor Matching & Job Posting**
+   - The system automatically creates a repair job listing based on AI results (photos, issue summary, estimated cost).
+   - Verified contractors nearby receive job notifications with attached AI analysis and details.
+   - Contractors can review the image set and submit their own offers, confirming or adjusting the AI estimate.
+   - Users (homeowners) can receive, compare, and review multiple contractor offers.
+   - Users (homeowners) can confirm a booking directly through the app.
+    
+3. **Contractor Workflow & Job Completion**
+   - Contractors can browse available repair jobs via map or list view.
+   - Contractors can accept a job or submit a customized offer if their estimate differs.
+   - Contractors can mark a job as “Completed by Me” after finishing the repair.
+   - The system notifies the homeowner that the job is marked complete.
+   - Homeowners can mark the job as “Completed,” triggering secure payment transfer.
+   - The system generates a receipt for both parties and allows them to rate each other.
 
-3. **Report Generation**
-   - Users can generate a comprehensive property report combining valuation, flaw detection, and regional comparisons.
-   - Reports include visualizations such as annotated images, charts, and condition summaries.
-   - Users can export reports as PDFs for offline use.
-   - Users can generate a secure, private link to share reports externally.
-
-4. **Iterative Valuation Updates**
-   - Users can open previously saved property sessions from a dashboard.
-   - Users can replace or add new photos for specific property areas.
-   - The system re-processes the updated photo set to detect changes in flaws or conditions.
-   - A revised condition grade and updated valuation range are displayed.
-   - The system highlights differences between the new and previous valuations (e.g., new flaws, improvements).
-     
-5. **Deployment and User Authentication**
-   - iOS mobile app available through the App Store.
+4. **In-App Payments & Ratings System**
+   - Users (homeowners) can make payments securely through the app.
+   - The system holds payments in escrow until the homeowner confirms job completion.
+   - Users can submit ratings and reviews for each completed job.
+   - The system updates user profiles with ratings and adjusts job visibility accordingly.
+    
+5. **Deployment & Authentication**
    - Users can register for an account and log in with email and password.
-   - Authentication system ensures secure access to saved property sessions.
-
+   - The system enforces role-based permissions to distinguish between homeowners and contractors.
+   - The system ensures secure access to job listings, payments, and personal account data.
+   - Users can access the app on iOS devices via the App Store.
+   
 ---
 
 ## Non-Functional Requirements
 
-1. **Property Valuation & Data Integration**
-   - Valuation calculations complete in ≤3 seconds for standard inputs.
-   - Forms and valuation results must render correctly on iOS mobile screens.
-   - System must handle API failures gracefully, displaying fallback messages without crashing.
+1. **AI-Powered Issue Detection & Cost Estimation**
+   - Image upload must complete in ≤5 seconds per image on standard Wi-Fi.
+   - AI analysis results returned in ≤10 seconds for up to 10 photos.
+   - Visual outputs (annotations, labels, confidence bars) must render consistently across iOS devices.
      
-2. **Photo Upload & AI-Powered Flaw Detection**
-   - Photo upload must complete in ≤5 seconds per image on standard Wi-Fi.
-   - AI analysis results returned in ≤10 seconds per batch of 5–10 images.
-   - Annotated images must display consistently across devices and screen sizes.
-
-3. **Report Generation**
-   - Report generation (PDF or private link) must complete in ≤5 seconds.
-   - Exported PDFs should be <10MB, optimized for sharing and mobile viewing.
-   - Visualizations (charts, annotated images) must maintain consistent design system styling.
+2. **Contractor Matching & Job Posting**
+   - Job posting creation must complete in ≤3 seconds after AI analysis.
+   - Contractor notifications should appear within ≤2 seconds of job posting.
+   - Offer submissions and updates must sync in real time.
+   - UI must display all offers clearly and allow sorting/filtering (by price, rating, distance).
+    
+3. **Contractor Workflow & Job Completion**
+   - Map view loads available jobs within ≤2 seconds and updates dynamically based on user location.
+   - Status changes (e.g., “Accepted,” “Completed”) must propagate to all parties instantly.
+   - Payment trigger on homeowner confirmation must complete securely within ≤5 seconds.
+   - The system must maintain a full audit trail for every transaction and job update.
      
-4. **Iterative Valuation Updates**
-   - Dashboard and saved sessions must load in ≤2 seconds.
-   - Updates with new photos must process and return revised valuation in ≤8 seconds.
-   - Differences between old and new valuations must be highlighted clearly (ex. colour-coded).
-   - System must handle multiple concurrent session updates without conflicts or errors.
+4. **In-App Payments & Ratings System**
+   - Payment processing latency ≤3 seconds per transaction.
+   - Escrow system must ensure funds remain secure until homeowner confirmation.
+   - Ratings must update instantly after submission and persist across sessions.
+   - User feedback data must sync to backend within ≤2 seconds for analytics and profile updates.
      
 5. **Deployment and User Authentication**
    - Authentication requests must complete in ≤2 seconds.
