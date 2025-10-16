@@ -19,7 +19,10 @@
   4. The system provides an estimated repair cost range, description of the detected issue, and possible causes.
   5. User can save or proceed to “Find a Contractor.”
 - **UI/UX demonstration**:
-<!--![](./cuj_input.jpg)-->
+![](./cuj_title.jpeg)
+![](./cuj_pic.jpeg)
+![](./cuj_analysis.jpeg)
+
 
 ---
 
@@ -33,8 +36,9 @@
   5. Homeowner receives multiple offers with contractor profiles, ratings, and proposed prices.
   6. Homeowner compares offers and confirms a booking directly through the app.  
 - **UI/UX demonstration**:
-<!--![](./cuj_photo.jpg)-->
-<!--![](./cuj_assess.jpg)-->
+![](./cuj_find.jpeg)-->
+![](./cuj_contractor.jpeg)-->
+![](./cuj_compare.jpeg)-->
 
 ---
 
@@ -48,8 +52,8 @@
    5. The homeowner reviews the work and sets the listing as “Completed,” triggering automatic payment processing.
    6. Both parties receive a receipt, and the option to rate each other.
 - **UI/UX demonstration**:
-<!--![](./cuj_dashboard.jpg)-->
-<!--![](./cuj_update.jpg)-->
+![](./cuj_contractor.jpeg)-->
+![](./cuj_map.jpeg)-->
 
 ---
 <!--
