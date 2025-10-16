@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:object_detect_test/utils/widget_keys.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -68,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: WidgetKeys.loginPage,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -173,6 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Login button
                   FilledButton(
+                    key: WidgetKeys.loginButton,
                     onPressed: _isLoading ? null : _handleEmailLogin,
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
