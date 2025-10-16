@@ -57,6 +57,10 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.6
   rename: ^3.1.0
+  integration_test:
+    sdk: flutter
+  mockito: ^5.5.1
+  build_runner: ^2.9.0
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

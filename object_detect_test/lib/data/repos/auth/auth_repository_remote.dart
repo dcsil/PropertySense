@@ -7,12 +7,12 @@ import '../../../utils/result.dart';
 // User type in this file refers to Firebase User not domain User
 
 class AuthRepositoryRemote implements AuthRepository {
-  final FirebaseAuth firebaseAuth;
-  AuthRepositoryRemote({required this.firebaseAuth});
+  final FirebaseAuth _firebaseAuth;
+  AuthRepositoryRemote({required FirebaseAuth firebaseAuth}) : _firebaseAuth = firebaseAuth;
 
   @override
   Stream<Result<Auth?>> authStateChanges() {
-    return firebaseAuth
+    return _firebaseAuth
         .authStateChanges()
         .map((User? user) => _mapFbUserToAuth(user));
   }
