@@ -24,7 +24,7 @@ void main() async {
   // Initialize Firebase while native splash is showing
   await Firebase.initializeApp();
 
-  const seedColor = Colors.deepPurple;
+  const seedColor = Colors.deepOrange;
 
   final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
