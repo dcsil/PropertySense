@@ -12,9 +12,6 @@ import 'package:object_detect_test/domain/models/user_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 import 'package:object_detect_test/ui/views/login_screen.dart';
 import 'package:object_detect_test/ui/views/home_screen.dart';
-// import 'package:object_detect_test/ui/views/user_setup_page.dart';
-// import 'package:object_detect_test/ui/views/onboarding_page.dart';
-// import 'package:object_detect_test/ui/views/fixer_dashboard_page.dart';
 
 void main() async {
   // Preserve native splash screen
@@ -24,7 +21,7 @@ void main() async {
   // Initialize Firebase while native splash is showing
   await Firebase.initializeApp();
 
-  const seedColor = Colors.deepOrange;
+  const seedColor = Colors.deepPurple;
 
   final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -54,17 +51,11 @@ void main() async {
               firebaseAuth: fb_auth.FirebaseAuth.instance,
             ),
           ),
-          ProxyProvider<AuthRepository, UserRepository>(
+          Provider<UserRepository>(
             create: (context) => UserRepositoryRemote(
               firestore: FirebaseFirestore.instance,
               authRepo: context.read<AuthRepository>(),
             ),
-            update: (context, authRepo, previous) =>
-                previous ??
-                UserRepositoryRemote(
-                  firestore: FirebaseFirestore.instance,
-                  authRepo: authRepo,
-                ),
           ),
         ],
         child: Builder(
@@ -84,8 +75,9 @@ void main() async {
 
                 // Handle failure - remove splash and show login
                 if (userResult is Failure) {
-                  Toaster.showErrorFromFailure(userResult as Failure);
-                  return const SizedBox.shrink();
+                  print('User state failure: ${(userResult as Failure).message}');
+                  FlutterNativeSplash.remove();
+                  return const LoginScreen();
                 }
 
                 // Success - get the user

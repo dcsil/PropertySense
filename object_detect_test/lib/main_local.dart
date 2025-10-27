@@ -51,17 +51,11 @@ void main() async {
               firebaseAuth: fb_auth.FirebaseAuth.instance,
             ),
           ),
-          ProxyProvider<AuthRepository, UserRepository>(
+          Provider<UserRepository>(
             create: (context) => UserRepositoryLocal(
               firestore: FirebaseFirestore.instance,
               authRepo: context.read<AuthRepository>(),
             ),
-            update: (context, authRepo, previous) =>
-                previous ??
-                UserRepositoryLocal(
-                  firestore: FirebaseFirestore.instance,
-                  authRepo: authRepo,
-                ),
           ),
         ],
         child: Builder(
@@ -81,8 +75,10 @@ void main() async {
 
                 // Handle failure - remove splash and show login
                 if (userResult is Failure) {
-                  Toaster.showErrorFromFailure(userResult as Failure);
-                  return const SizedBox.shrink();
+                  // Exit splash screen and go to login screen
+                  print('User state failure: ${(userResult as Failure).message}');
+                  FlutterNativeSplash.remove();
+                  return const LoginScreen();
                 }
 
                 // Success - get the user
