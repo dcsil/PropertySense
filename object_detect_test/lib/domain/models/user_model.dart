@@ -1,7 +1,7 @@
 // https://firebase.google.com/docs/firestore/query-data/get-data
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum UserType { lister, fixer }
+enum UserType { homeowner, contractor }
 
 class User {
   final String userID;
@@ -44,9 +44,9 @@ class User {
   static UserType _userTypeFromString(int userTypeInt) {
     switch (userTypeInt) {
       case 0:
-        return UserType.lister;
+        return UserType.homeowner;
       case 1:
-        return UserType.fixer;
+        return UserType.contractor;
       default:
         throw Exception('Unknown user type: $userTypeInt');
     }

@@ -11,7 +11,8 @@ import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/domain/models/user_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 import 'package:object_detect_test/ui/views/login_screen.dart';
-import 'package:object_detect_test/ui/views/home_screen.dart';
+import 'package:object_detect_test/ui/views/homeowner_home_screen.dart';
+import 'package:object_detect_test/ui/views/contractor_home_screen.dart';
 
 void main() async {
   // Preserve native splash screen
@@ -90,9 +91,10 @@ void main() async {
                 // Route based on user state
                 if (user == null) return const LoginScreen();
                 // if (!user.isOnboarded) return const OnboardingPage();
-                if (user.type == UserType.lister) return const HomeScreen();
-                // return const FixerDashboardPage();
-                return const HomeScreen();
+                if (user.type == UserType.homeowner) return const HomeScreen();
+                if (user.type == UserType.contractor) return const ContractorHomeScreen();
+                // Fallback
+                return LoginScreen();
               },
             );
           },
