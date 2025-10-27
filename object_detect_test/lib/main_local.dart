@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:object_detect_test/data/repos/auth/auth_repository_local.dart';
 import 'package:object_detect_test/data/repos/user/user_repository_local.dart';
+import 'package:object_detect_test/ui/viewmodels/login_viewmodel.dart';
 import 'package:object_detect_test/utils/toaster.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -58,6 +59,12 @@ void main() async {
               authRepo: context.read<AuthRepository>(),
             ),
           ),
+          ChangeNotifierProvider<LoginViewModel>(
+            create: (context) => LoginViewModel(
+              context.read<AuthRepository>(),
+              context.read<UserRepository>(),
+            ),
+          ),
         ],
         child: Builder(
           builder: (context) {
@@ -77,7 +84,9 @@ void main() async {
                 // Handle failure - remove splash and show login
                 if (userResult is Failure) {
                   // Exit splash screen and go to login screen
-                  print('User state failure: ${(userResult as Failure).message}');
+                  print(
+                    'User state failure: ${(userResult as Failure).message}',
+                  );
                   FlutterNativeSplash.remove();
                   return const LoginScreen();
                 }
@@ -92,7 +101,8 @@ void main() async {
                 if (user == null) return const LoginScreen();
                 // if (!user.isOnboarded) return const OnboardingPage();
                 if (user.type == UserType.homeowner) return const HomeScreen();
-                if (user.type == UserType.contractor) return const ContractorHomeScreen();
+                if (user.type == UserType.contractor)
+                  return const ContractorHomeScreen();
                 // Fallback
                 return LoginScreen();
               },
