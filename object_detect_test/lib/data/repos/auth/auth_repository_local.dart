@@ -20,6 +20,26 @@ class AuthRepositoryLocal implements AuthRepository {
         .map((User? user) => _mapFbUserToAuth(user));
   }
 
+  @override
+  Future<Result<void>> signInWithEmail(String email, String password) async {
+    try {
+      await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to sign in with email and password: $e');
+    }
+  }
+
+  @override
+  Future<Result<void>> signInWithGoogle() async {
+    return Failure('Sign in with Google not supported in local emulator');
+  }
+
+  @override
+  Future<Result<void>> signInWithApple() async {
+    return Failure('Sign in with Apple not supported in local emulator');
+  }
+
   Result<Auth?> _mapFbUserToAuth(User? user) {
     if (user == null) return Success(null);
     final DateTime? created = user.metadata.creationTime;

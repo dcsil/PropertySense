@@ -25,11 +25,10 @@ void main() async {
 
   const seedColor = Colors.deepPurple;
 
-  final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   runApp(
     MaterialApp(
-      scaffoldMessengerKey: scaffoldMessengerKey,
+      scaffoldMessengerKey: Toaster.scaffoldMessengerKey,
       title: 'Property Sense',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -101,8 +100,9 @@ void main() async {
                 if (user == null) return const LoginScreen();
                 // if (!user.isOnboarded) return const OnboardingPage();
                 if (user.type == UserType.homeowner) return const HomeScreen();
-                if (user.type == UserType.contractor)
+                if (user.type == UserType.contractor) {
                   return const ContractorHomeScreen();
+                }
                 // Fallback
                 return LoginScreen();
               },

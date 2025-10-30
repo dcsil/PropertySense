@@ -24,11 +24,9 @@ void main() async {
 
   const seedColor = Colors.deepPurple;
 
-  final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
-
   runApp(
     MaterialApp(
-      scaffoldMessengerKey: scaffoldMessengerKey,
+      scaffoldMessengerKey: Toaster.scaffoldMessengerKey,
       title: 'Property Sense',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -76,7 +74,9 @@ void main() async {
 
                 // Handle failure - remove splash and show login
                 if (userResult is Failure) {
-                  print('User state failure: ${(userResult as Failure).message}');
+                  print(
+                    'User state failure: ${(userResult as Failure).message}',
+                  );
                   FlutterNativeSplash.remove();
                   return const LoginScreen();
                 }
@@ -90,7 +90,9 @@ void main() async {
                 // Route based on user state
                 if (user == null) return const LoginScreen();
                 if (user.type == UserType.homeowner) return const HomeScreen();
-                if (user.type == UserType.contractor) return const ContractorHomeScreen();
+                if (user.type == UserType.contractor) {
+                  return const ContractorHomeScreen();
+                }
                 // Fallback
                 return const LoginScreen();
               },

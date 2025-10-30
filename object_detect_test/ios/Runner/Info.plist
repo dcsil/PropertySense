@@ -49,5 +49,21 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>GIDClientID</key>
+		<!-- Copied from GoogleService-Info.plist key CLIENT_ID -->
+		<string>521542213835-3nbnggqeiosf668nv0tgmaqsdji3hc66.apps.googleusercontent.com</string>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<!-- TODO Replace this value: -->
+					<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
+					<string>com.googleusercontent.apps.521542213835-3nbnggqeiosf668nv0tgmaqsdji3hc66</string>
+				</array>
+			</dict>
+		</array>
 	</dict>
 </plist>
