@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
+import 'package:object_detect_test/domain/models/auth_model.dart';
 import 'package:object_detect_test/domain/models/user_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 import 'package:object_detect_test/utils/toaster.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
-  final UserRepository _userRepository;
 
   bool isLoading = false;
 
@@ -17,21 +17,21 @@ class LoginViewModel extends ChangeNotifier {
   String email = '';
   String password = '';
 
-  User? currentUser;
+  Auth? currentAuth;
 
-  StreamSubscription<Result<User?>>? _userSubscription;
+  StreamSubscription<Result<Auth?>>? _authSubscription;
 
-  LoginViewModel(this._authRepository, this._userRepository) {
-    _listenToUserChanges();
+  LoginViewModel(this._authRepository) {
+    _listenToAuthChanges();
   }
 
-  void _listenToUserChanges() {
-    _userSubscription = _userRepository.userStateChanges().listen((result) {
+  void _listenToAuthChanges() {
+    _authSubscription = _authRepository.authStateChanges().listen((result) {
       // Set isLoading to false when user state changes are received
       isLoading = false;
       switch (result) {
-        case Success<User?>():
-          currentUser = result.value;
+        case Success<Auth?>():
+          currentAuth = result.value;
           notifyListeners();
         case Failure():
           Toaster.showError(
@@ -105,7 +105,7 @@ class LoginViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    _userSubscription?.cancel();
+    _authSubscription?.cancel();
     super.dispose();
   }
 

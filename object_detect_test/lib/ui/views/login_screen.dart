@@ -13,13 +13,8 @@ class LoginScreen extends StatelessWidget {
     final viewModel = context.watch<LoginViewModel>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (viewModel.currentUser != null) {
-        switch (viewModel.currentUser!.type) {
-          case UserType.homeowner:
-            context.go('/home');
-          case UserType.contractor:
-            context.go('/contractor');
-        }
+      if (viewModel.currentAuth != null) {
+        context.go('/register');
       }
     });
 

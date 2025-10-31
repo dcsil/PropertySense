@@ -32,7 +32,6 @@ void main() async {
         ChangeNotifierProvider<LoginViewModel>(
           create: (context) => LoginViewModel(
             context.read<AuthRepository>(),
-            context.read<UserRepository>(),
           ),
         ),
       ],
