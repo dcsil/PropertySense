@@ -34,13 +34,13 @@ class UserRepositoryLocal implements UserRepository {
 
   Future<Result<User?>> _fetchUser(Auth auth) async {
     try {
-      final doc = await _firestore.collection('users').doc(auth.userID).get();
+      final doc = await _firestore.collection('users').doc(auth.id).get();
 
       // TODO this is when user is logged in but user document is missing
       // We should handle this safely. For not the behavior is just to log them out.
       if (!doc.exists || doc.data() == null) {
         await _authRepo.signOut();
-        return Failure('Could not find user document for authenticated user ${auth.userID}\n Please contact Support.');
+        return Failure('Could not find user document for authenticated user ${auth.id}\n Please contact Support.');
       }
 
       final user = User.fromFirestore(doc, null);

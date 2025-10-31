@@ -65,7 +65,7 @@ void main() {
               if (result is! Success<Auth?>) return false;
               final auth = result.value;
               return auth != null &&
-                  auth.userID == testUserId &&
+                  auth.id == testUserId &&
                   auth.createdDate == testCreationTime;
             }),
           ),
@@ -134,7 +134,7 @@ void main() {
               if (result is! Success<Auth?>) return false;
               final auth = result.value;
               return auth != null &&
-                  auth.userID == testUserId1 &&
+                  auth.id == testUserId1 &&
                   auth.createdDate == testCreationTime1;
             }),
             // Logged out
@@ -146,7 +146,7 @@ void main() {
               if (result is! Success<Auth?>) return false;
               final auth = result.value;
               return auth != null &&
-                  auth.userID == testUserId2 &&
+                  auth.id == testUserId2 &&
                   auth.createdDate == testCreationTime2;
             }),
           ]),
@@ -202,7 +202,7 @@ void main() {
         // Assert
         final result = await stream.first;
         expect(result, isA<Success<Auth?>>());
-        expect((result as Success<Auth?>).value?.userID, testUserId);
+        expect((result as Success<Auth?>).value?.id, testUserId);
         expect(result.value?.createdDate, testCreationTime);
       });
 

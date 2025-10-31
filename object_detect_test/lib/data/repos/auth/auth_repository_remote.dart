@@ -69,6 +69,12 @@ class AuthRepositoryRemote implements AuthRepository {
 
   Result<Auth?> _mapFbUserToAuth(User? user) {
     if (user == null) return Success(null);
+    final String? email = user.email;
+    if (email == null) {
+      return Failure(
+        'Could not map firebase user to domain Auth: email is null',
+      );
+    }
     final DateTime? created = user.metadata.creationTime;
     if (created == null) {
       return Failure(
@@ -76,7 +82,7 @@ class AuthRepositoryRemote implements AuthRepository {
       );
     }
 
-    return Success(Auth(userID: user.uid, createdDate: created));
+    return Success(Auth(id: user.uid, email: email, createdDate: created));
   }
 
   @override

@@ -5,13 +5,11 @@ enum UserType { homeowner, contractor }
 
 class User {
   final String id;
-  final String email;
   final UserType type;
   final DateTime createdDate;
 
   User({
     required this.id,
-    required this.email,
     required this.type,
     required this.createdDate,
   });
@@ -24,7 +22,6 @@ class User {
       final map = snapshot.data();
       return User(
         id: snapshot.id,
-        email: map?['email'] as String,
         type: _userTypeFromString(map?['type'] as int),
         createdDate: (map?['createdDate'] as Timestamp).toDate(),
       );
@@ -33,7 +30,6 @@ class User {
   // Convert from User to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
-      'email': email,
       'type': type.index,
       'createdDate': Timestamp.fromDate(createdDate),
     };
