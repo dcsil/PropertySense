@@ -14,7 +14,12 @@ class LoginScreen extends StatelessWidget {
     // Navigate when user is logged in
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (viewModel.currentUser != null) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        switch (viewModel.currentUser!.type) {
+          case UserType.homeowner:
+            context.go('/home');
+          case UserType.contractor:
+            context.go('/contractor');
+        }
       }
     });
     return Scaffold(
