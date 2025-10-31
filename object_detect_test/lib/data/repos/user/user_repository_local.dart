@@ -37,7 +37,7 @@ class UserRepositoryLocal implements UserRepository {
       final doc = await _firestore.collection('users').doc(auth.userID).get();
 
       if (!doc.exists) {
-        return Success(null);
+        return Failure('Could not find user document for authenticated user ${auth.userID}\n Please contact Support.');
       }
 
       final data = doc.data();
