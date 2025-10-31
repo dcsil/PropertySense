@@ -4,13 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum UserType { homeowner, contractor }
 
 class User {
-  final String userID;
+  final String id;
   final String email;
   final UserType type;
   final DateTime createdDate;
 
   User({
-    required this.userID,
+    required this.id,
     required this.email,
     required this.type,
     required this.createdDate,
@@ -23,7 +23,7 @@ class User {
     ){
       final map = snapshot.data();
       return User(
-        userID: map?['UID'] as String,
+        id: snapshot.id,
         email: map?['email'] as String,
         type: _userTypeFromString(map?['type'] as int),
         createdDate: (map?['createdDate'] as Timestamp).toDate(),
@@ -33,14 +33,12 @@ class User {
   // Convert from User to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
-      'UID': userID,
       'email': email,
-      'type': type.name,  // Converts enum to string
+      'type': type.index,
       'createdDate': Timestamp.fromDate(createdDate),
     };
   }
 
-  // Helper to convert string to enum
   static UserType _userTypeFromString(int userTypeInt) {
     switch (userTypeInt) {
       case 0:
