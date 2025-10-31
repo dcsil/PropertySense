@@ -11,19 +11,24 @@ class AuthRepositoryLocal implements AuthRepository {
     required FirebaseAuth firebaseAuth,
     String emulatorHost = 'localhost',
     int emulatorPort = 9099,
-  }) : _firebaseAuth = firebaseAuth {_firebaseAuth.useAuthEmulator(emulatorHost, emulatorPort);}
+  }) : _firebaseAuth = firebaseAuth {
+    _firebaseAuth.useAuthEmulator(emulatorHost, emulatorPort);
+  }
 
   @override
   Stream<Result<Auth?>> authStateChanges() {
-    return _firebaseAuth
-        .authStateChanges()
-        .map((User? user) => _mapFbUserToAuth(user));
+    return _firebaseAuth.authStateChanges().map(
+      (User? user) => _mapFbUserToAuth(user),
+    );
   }
 
   @override
   Future<Result<void>> signInWithEmail(String email, String password) async {
     try {
-      await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
+      await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
       return Success(null);
     } catch (e) {
       return Failure('Failed to sign in with email and password: $e');
@@ -44,9 +49,21 @@ class AuthRepositoryLocal implements AuthRepository {
     if (user == null) return Success(null);
     final DateTime? created = user.metadata.creationTime;
     if (created == null) {
-      return Failure('Could not map firebase user to domain Auth: creationTime is null');
+      return Failure(
+        'Could not map firebase user to domain Auth: creationTime is null',
+      );
     }
 
     return Success(Auth(userID: user.uid, createdDate: created));
+  }
+
+  @override
+  Future<Result<void>> signOut() async {
+    try {
+      await _firebaseAuth.signOut();
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to sign out: $e');
+    }
   }
 }

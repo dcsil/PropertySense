@@ -30,13 +30,11 @@ class UserRepositoryRemote implements UserRepository {
     try {
       final doc = await _firestore.collection('users').doc(auth.userID).get();
 
-      if (!doc.exists) {
-        return Success(null);
-      }
-
-      final data = doc.data();
-      if (data == null) {
-        return Failure('Could not find user ${auth.userID} in firestore');
+      // TODO this is when user is logged in but user document is missing
+      // We should handle this safely. For not the behavior is just to log them out.
+      if (!doc.exists || doc.data() == null) {
+        await _authRepo.signOut();
+        return Failure('Could not find user document for authenticated user ${auth.userID}\n Please contact Support.');
       }
 
       final user = User.fromFirestore(doc, null);

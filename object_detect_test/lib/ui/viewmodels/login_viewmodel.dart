@@ -9,7 +9,7 @@ import 'package:object_detect_test/utils/toaster.dart';
 class LoginViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
   final UserRepository _userRepository;
-  
+
   bool isLoading = false;
 
   bool isPasswordVisible = false;
@@ -18,22 +18,25 @@ class LoginViewModel extends ChangeNotifier {
   String password = '';
 
   User? currentUser;
-  
+
   StreamSubscription<Result<User?>>? _userSubscription;
-  
+
   LoginViewModel(this._authRepository, this._userRepository) {
     _listenToUserChanges();
   }
-  
+
   void _listenToUserChanges() {
     _userSubscription = _userRepository.userStateChanges().listen((result) {
+      // Set isLoading to false when user state changes are received
+      isLoading = false;
       switch (result) {
         case Success<User?>():
           currentUser = result.value;
           notifyListeners();
         case Failure():
-          Toaster.showError('Could not fetch user data');
-          Toaster.showErrorFromFailure(result as Failure);
+          Toaster.showError(
+            'Could not fetch user data: ${(result as Failure).message}',
+          );
       }
     });
   }
@@ -44,23 +47,28 @@ class LoginViewModel extends ChangeNotifier {
       Toaster.showError('Please enter email and password');
       return;
     }
-    
+
     if (!_isValidEmail(email)) {
       Toaster.showError('Invalid email format$email');
       return;
     }
-    
+
     isLoading = true;
     notifyListeners();
-    
+
     final result = await _authRepository.signInWithEmail(email, password);
-    
-    isLoading = false;
-    notifyListeners();
-    
+
+    // We set isLoading to false when user changes are received so that we keep loading until user state change is populated.
+
+    // If result is failure then we can set loading false right away.
     if (result is Failure) {
       Toaster.showErrorFromFailure(result);
+      if (isLoading) {
+        isLoading = false;
+      }
     }
+
+    notifyListeners();
   }
 
   Future<void> loginWithGoogle() async {
@@ -71,7 +79,7 @@ class LoginViewModel extends ChangeNotifier {
 
     isLoading = false;
     notifyListeners();
-    
+
     if (result is Failure) {
       Toaster.showErrorFromFailure(result);
     }
@@ -94,7 +102,7 @@ class LoginViewModel extends ChangeNotifier {
   bool _isValidEmail(String email) {
     return email.contains('@') && email.contains('.');
   }
-  
+
   @override
   void dispose() {
     _userSubscription?.cancel();

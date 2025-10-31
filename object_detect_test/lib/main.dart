@@ -8,10 +8,11 @@ import 'package:object_detect_test/data/repos/user/user_repository_remote.dart';
 import 'package:object_detect_test/ui/viewmodels/login_viewmodel.dart';
 import 'package:object_detect_test/utils/router.dart';
 import 'package:object_detect_test/utils/toaster.dart';
+import 'package:object_detect_test/utils/widget_keys.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
-  // Initialize Firebase while native splash is showing
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
   const seedColor = Colors.deepPurple;
@@ -36,6 +37,7 @@ void main() async {
         ),
       ],
       child: MaterialApp.router(
+        key: WidgetKeys.mainApp,
         routerConfig: router,
         scaffoldMessengerKey: Toaster.scaffoldMessengerKey,
         title: 'Property Sense',

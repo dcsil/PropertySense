@@ -10,9 +10,12 @@ import 'package:flutter/foundation.dart';
 class WidgetKeys {
   WidgetKeys._();
 
+  static const mainApp = Key('main_app');
+
   // ==================== Pages ====================
   static const loginPage = Key('login_page');
-  static const homePage = Key('home_page');
+  static const homeOwnerHomePage = Key('home_owner_home_page');
+  static const contractorHomePage = Key('contractor_home_page');
 
   // ==================== Login Screen ====================
   static const emailField = Key('email_field');

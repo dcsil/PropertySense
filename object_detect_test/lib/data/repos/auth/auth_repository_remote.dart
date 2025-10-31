@@ -78,4 +78,14 @@ class AuthRepositoryRemote implements AuthRepository {
 
     return Success(Auth(userID: user.uid, createdDate: created));
   }
+
+  @override
+  Future<Result<void>> signOut() async {
+    try {
+      await _firebaseAuth.signOut();
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to sign out: $e');
+    }
+  }
 }
