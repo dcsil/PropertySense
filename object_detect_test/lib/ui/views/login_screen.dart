@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:object_detect_test/domain/models/user_model.dart';
 import 'package:object_detect_test/ui/viewmodels/login_viewmodel.dart';
-import 'package:object_detect_test/utils/toaster.dart';
 import 'package:object_detect_test/utils/widget_keys.dart';
 import 'package:provider/provider.dart';
 
@@ -11,7 +12,6 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = context.watch<LoginViewModel>();
 
-    // Navigate when user is logged in
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (viewModel.currentUser != null) {
         switch (viewModel.currentUser!.type) {
@@ -22,6 +22,7 @@ class LoginScreen extends StatelessWidget {
         }
       }
     });
+
     return Scaffold(
       key: WidgetKeys.loginPage,
       body: SafeArea(
@@ -82,7 +83,7 @@ class LoginScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Password field
-                    TextFormField(
+                  TextFormField(
                     key: WidgetKeys.passwordField,
                     obscureText: viewModel.isPasswordVisible ? false : true,
                     textInputAction: TextInputAction.done,
@@ -94,24 +95,24 @@ class LoginScreen extends StatelessWidget {
                       prefixIcon: const Icon(Icons.lock_outlined),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                      icon: Icon(
-                        viewModel.isPasswordVisible
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                      ),
-                      onPressed: viewModel.togglePasswordVisibility,
+                        icon: Icon(
+                          viewModel.isPasswordVisible
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: viewModel.togglePasswordVisibility,
                       ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
+                        return 'Please enter your password';
                       }
                       if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                        return 'Password must be at least 6 characters';
                       }
                       return null;
                     },
-                    ),
+                  ),
                   const SizedBox(height: 8),
 
                   // Forgot password link
@@ -165,7 +166,9 @@ class LoginScreen extends StatelessWidget {
 
                   // Google sign-in button
                   OutlinedButton.icon(
-                    onPressed: viewModel.isLoading ? null : viewModel.loginWithGoogle,
+                    onPressed: viewModel.isLoading
+                        ? null
+                        : viewModel.loginWithGoogle,
                     icon: Image.asset(
                       'assets/google_logo.png', // You'll need to add this
                       height: 24,
@@ -183,7 +186,9 @@ class LoginScreen extends StatelessWidget {
 
                   // Apple sign-in button
                   OutlinedButton.icon(
-                    onPressed: viewModel.isLoading ? null : viewModel.loginWithApple,
+                    onPressed: viewModel.isLoading
+                        ? null
+                        : viewModel.loginWithApple,
                     icon: const Icon(Icons.apple, size: 24),
                     label: const Text('Continue with Apple'),
                     style: OutlinedButton.styleFrom(

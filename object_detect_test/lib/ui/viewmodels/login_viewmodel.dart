@@ -27,21 +27,19 @@ class LoginViewModel extends ChangeNotifier {
   
   void _listenToUserChanges() {
     _userSubscription = _userRepository.userStateChanges().listen((result) {
-      if (result is Success) {
-        currentUser = (result as Success).value;
-        notifyListeners(); // ← Triggers view to check navigation
-      } else if (result is Failure) {
-        currentUser = null;
-        Toaster.showError((result as Failure).message);
-        notifyListeners();
+      switch (result) {
+        case Success<User?>():
+          currentUser = result.value;
+          notifyListeners();
+        case Failure():
+          Toaster.showError('Could not fetch user data');
+          Toaster.showErrorFromFailure(result as Failure);
       }
     });
   }
-  
+
   // We're not doing navigation in the viewmodel. View will be listening and then on login success it will navigate.
   Future<void> login() async {
-    print(email);
-    print(password);
     if (email.isEmpty || password.isEmpty) {
       Toaster.showError('Please enter email and password');
       return;
