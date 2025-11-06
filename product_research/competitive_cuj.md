@@ -1,5 +1,5 @@
 # A7 Competitive CUJ Document
-Hello World
+In this document, we walk through our step-by-step experience using TaskRabbit to book a small home repair service. We document the complete user journey, from initial online research and problem identification to selecting a professional and reaching the booking stage. Our analysis highlights both successful elements of the experience and the pain points that create friction or uncertainty for homeowners. We conclude with targeted recommendations for improvement and a comparison to how PropertySense AI addresses these challenges through AI-driven cost estimation, verified professionals, and escrow-backed payments.
 
 ### Date: 11/05/2025
 
@@ -10,9 +10,10 @@ Hello World
 - Carol Meng - 1008593675
 
 ## TL;DR
+TaskRabbit provides a convenient and trustworthy way to find local repair help, with verified profiles and simple scheduling. However, users must self-diagnose their issue and manually estimate costs, which leads to uncertainty and extra research. This matters because it delays decision-making and weakens confidence. PropertySense AI eliminates this friction through AI photo analysis, upfront pricing, and secure escrow payments.
 
 ## User Goal
-As a homeowner with a plumbing issue, I want to find a reliable and affordable contractor near me, so that I can book the repair quickly without worrying about scams or unclear pricing.
+As a homeowner experiencing a minor plumbing issue, I want to research repair options online and use TaskRabbit to find a reliable, affordable contractor near me, so that I can understand the expected cost, book quickly, and get the problem fixed with confidence and minimal hassle.
 
 ## Summary of Findings
 
