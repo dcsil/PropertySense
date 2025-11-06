@@ -64,3 +64,14 @@ Device Used: Smartphone (Android, Chrome browser).
 
 ## End-to-End User Journey Documentation
 
+| **Step**                  | **Notes** | **Screenshot** | 
+| -------------------------- | --------- | ------------------ | 
+| **1. Seach & Entry**     | Googled “home repair” and opened the TaskRabbit official website. Homepage showed clear service categories and CTA buttons.       | ![screenshot1](./cuj_assets/image1.jpg)       | 
+| **2. Select Home Repairs Category**   | Chose “Home Repairs,” which redirected to a form for address input.       | ![screenshot1](./cuj_assets/image2.jpg)       |
+| **3. Input Address** | Entered street name and number, as well as the postal code to find nearby Taskers. Smooth and quick location detection.       | ![screenshot1](./cuj_assets/image3.jpg)          |
+| **4. Choose Task Size** | Selected "Small (1 hour)" from three available options. The system gave approximate time ranges but no fixed pricing.       | ![screenshot1](./cuj_assets/image4.jpg)          | 
+| **5. Describe the Issue**        | Typed “plumbing” in the free-text field. No photo upload option, meaning users must describe issues manually.        | ![screenshot1](./cuj_assets/image5.jpg)       | 
+| **6. View Available Taskers**        | TaskRabbit displayed local Taskers with hourly rates, ratings, and short bios. Results sorted by “Recommended.”        | ![screenshot1](./cuj_assets/image6.jpg)       | 
+| **7. Select Tasker and Schedule**        | Tapped one Tasker profile, reviewed details, and chose a time slot via built-in calendar. Straightforward but required multiple taps.        | ![screenshot1](./cuj_assets/image7.jpg)       | 
+| **8. Redirect to Sign-Up**        | Upon confirming time, redirected to create an account (email or Apple login) and prompted for credit card setup.        | ![screenshot1](./cuj_assets/image8.jpg)       | 
+| **9. Post-Booking, Payment**        | After setting up account with credit card information, the Tasker receives request, confirms job, and completes task. Payment and tip handled automatically via Stripe.        | ![screenshot1](./cuj_assets/image9.jpg) | 
