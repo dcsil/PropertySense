@@ -6,6 +6,7 @@ import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/data/repos/auth/auth_repository_remote.dart';
 import 'package:object_detect_test/data/repos/user/user_repository_remote.dart';
 import 'package:object_detect_test/ui/viewmodels/login_viewmodel.dart';
+import 'package:object_detect_test/ui/viewmodels/registration_viewmodel.dart';
 import 'package:object_detect_test/utils/router.dart';
 import 'package:object_detect_test/utils/toaster.dart';
 import 'package:object_detect_test/utils/widget_keys.dart';
@@ -32,6 +33,12 @@ void main() async {
         ChangeNotifierProvider<LoginViewModel>(
           create: (context) => LoginViewModel(
             context.read<AuthRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider<RegistrationViewModel>(
+          create: (context) => RegistrationViewModel(
+            context.read<AuthRepository>(),
+            context.read<UserRepository>(),
           ),
         ),
       ],

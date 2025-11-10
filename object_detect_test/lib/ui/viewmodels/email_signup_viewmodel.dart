@@ -6,7 +6,7 @@ import 'package:object_detect_test/domain/models/auth_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 import 'package:object_detect_test/utils/toaster.dart';
 
-class LoginViewModel extends ChangeNotifier {
+class EmailSignupViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
 
   bool isLoading = false;
@@ -20,7 +20,7 @@ class LoginViewModel extends ChangeNotifier {
 
   StreamSubscription<Result<Auth?>>? _authSubscription;
 
-  LoginViewModel(this._authRepository) {
+  EmailSignupViewModel(this._authRepository) {
     _listenToAuthChanges();
   }
 
@@ -41,7 +41,7 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   // We're not doing navigation in the viewmodel. View will be listening and then on login success it will navigate.
-  Future<void> login() async {
+  Future<void> signUpWithEmail() async {
     if (email.isEmpty || password.isEmpty) {
       Toaster.showError('Please enter email and password');
       return;
@@ -55,7 +55,7 @@ class LoginViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    final result = await _authRepository.signInWithEmail(email, password);
+    final result = await _authRepository.signUpWithEmail(email, password);
 
     // We set isLoading to false when user changes are received so that we keep loading until user state change is populated.
 
@@ -68,34 +68,6 @@ class LoginViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
-  }
-
-  Future<void> loginWithGoogle() async {
-    isLoading = true;
-    notifyListeners();
-
-    final result = await _authRepository.signInWithGoogle();
-
-    isLoading = false;
-    notifyListeners();
-
-    if (result is Failure) {
-      Toaster.showErrorFromFailure(result);
-    }
-  }
-
-  Future<void> loginWithApple() async {
-    isLoading = true;
-    notifyListeners();
-
-    final result = await _authRepository.signInWithApple();
-
-    isLoading = false;
-    notifyListeners();
-
-    if (result is Failure) {
-      Toaster.showErrorFromFailure(result);
-    }
   }
 
   bool _isValidEmail(String email) {
