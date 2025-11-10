@@ -34,6 +34,7 @@ class UserRepositoryRemote implements UserRepository {
     try {
       // This is same as put
       await _firestore.collection('users').doc(user.id).set(user.toFirestore());
+      currentUser = user;
       return Success(null);
     } catch (e) {
       return Failure('Failed to create user document: $e');

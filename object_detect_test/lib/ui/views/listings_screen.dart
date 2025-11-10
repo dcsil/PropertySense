@@ -11,7 +11,7 @@ class ListingOverviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Provider(
+    return ChangeNotifierProvider(
       create: (context) => ListingsViewModel(
         context.read<ListingRepository>(),
         context.read<UserRepository>()
@@ -26,6 +26,7 @@ class ListingOverviewScreenContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      // Trigger a state change by emitting the updated user
     final viewModel = context.watch<ListingsViewModel>();
 
     return Scaffold(
