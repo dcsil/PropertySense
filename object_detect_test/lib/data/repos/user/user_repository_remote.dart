@@ -12,12 +12,15 @@ class UserRepositoryRemote implements UserRepository {
         _authRepo = authRepo;
 
   @override
+  User? currentUser;
+
+  @override
   Stream<Result<User?>> userStateChanges() {
     return _authRepo.authStateChanges().asyncMap((authResult) async {
       return switch (authResult) {
-        Success(value: final auth) when auth == null => Success<User?>(null),
+        Success(value: final auth) when auth == null => Success<User?>(currentUser = null),
 
-        Success(value: final auth) => await _fetchUser(auth!),
+        Success(value: final auth) => await fetchUser(auth!.id),
 
         Failure(message: final message) => Failure<User?>(
           'Auth error: $message',
@@ -26,20 +29,35 @@ class UserRepositoryRemote implements UserRepository {
     });
   }
 
-  Future<Result<User?>> _fetchUser(Auth auth) async {
+  @override
+  Future<Result<void>> createUserDocument(User user) async {
     try {
-      final doc = await _firestore.collection('users').doc(auth.id).get();
+      // This is same as put
+      await _firestore.collection('users').doc(user.id).set(user.toFirestore());
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to create user document: $e');
+    }
+  }
+
+
+  @override
+  Future<Result<User?>> fetchUser(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
 
       // TODO this is when user is logged in but user document is missing
       // We should handle this safely. For not the behavior is just to log them out.
       if (!doc.exists || doc.data() == null) {
         await _authRepo.signOut();
-        return Failure('Could not find user document for authenticated user ${auth.id}\n Please contact Support.');
+        return Failure('Could not find user document for authenticated user $uid\n Please contact Support.');
       }
 
-      final user = User.fromFirestore(doc, null);
+      final user = await User.fromFirestore(doc, null);
+      currentUser = user;
       return Success(user);
     } catch (e) {
+      print(e);
       return Failure('Failed to fetch user: $e');
     }
   }

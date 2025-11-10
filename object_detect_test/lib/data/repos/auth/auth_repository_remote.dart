@@ -8,13 +8,16 @@ import '../../../utils/result.dart';
 // User type in this file refers to Firebase User not domain User
 
 class AuthRepositoryRemote implements AuthRepository {
-  final FirebaseAuth _firebaseAuth;
+
   AuthRepositoryRemote({required FirebaseAuth firebaseAuth})
-    : _firebaseAuth = firebaseAuth;
+    : firebaseAuthInstance = firebaseAuth;
+
+  @override
+  FirebaseAuth firebaseAuthInstance;
 
   @override
   Stream<Result<Auth?>> authStateChanges() {
-    return _firebaseAuth.authStateChanges().map(
+    return firebaseAuthInstance.userChanges().map(
       (User? user) => _mapFbUserToAuth(user),
     );
   }
@@ -22,7 +25,7 @@ class AuthRepositoryRemote implements AuthRepository {
   @override
   Future<Result<void>> signInWithEmail(String email, String password) async {
     try {
-      await _firebaseAuth.signInWithEmailAndPassword(
+      await firebaseAuthInstance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -47,7 +50,7 @@ class AuthRepositoryRemote implements AuthRepository {
       );
 
       // Once signed in, return the UserCredential
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      await firebaseAuthInstance.signInWithCredential(credential);
 
       return Success(null);
     } catch (e) {
@@ -60,7 +63,7 @@ class AuthRepositoryRemote implements AuthRepository {
     // TODO
     return Failure('Sign in with Apple not implemented yet');
     // try {
-    //   await _firebaseAuth.signInWithApple();
+    //   await firebaseAuthInstance.signInWithApple();
     //   return Success(null);
     // } catch (e) {
     //   return Failure('Failed to sign in with Apple: $e');
@@ -81,17 +84,49 @@ class AuthRepositoryRemote implements AuthRepository {
         'Could not map firebase user to domain Auth: creationTime is null',
       );
     }
-
-    return Success(Auth(id: user.uid, email: email, createdDate: created));
+    return Success(Auth(id: user.uid, email: email, createdDate: created, isEmailVerified: user.emailVerified));
   }
 
   @override
   Future<Result<void>> signOut() async {
     try {
-      await _firebaseAuth.signOut();
+      await firebaseAuthInstance.signOut();
       return Success(null);
     } catch (e) {
       return Failure('Failed to sign out: $e');
+    }
+  }
+
+  @override
+  Future<Result<void>> signUpWithEmail(String email, String password) async {
+    try {
+      await firebaseAuthInstance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to sign up with email and password: $e');
+    }
+  }
+
+  @override
+  Future<Result<void>> sendPasswordResetEmail(String email) async {
+    try {
+      await firebaseAuthInstance.sendPasswordResetEmail(email: email);
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to send password reset email: $e');
+    }
+  }
+
+  @override
+  Future<Result<void>> sendVerificationEmail() async {
+    try {
+      await firebaseAuthInstance.currentUser?.sendEmailVerification();
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to send verification email: $e');
     }
   }
 }
