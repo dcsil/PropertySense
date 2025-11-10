@@ -4,8 +4,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ListingStatus {
   draft,
-  posted,
+  pending,
   done
+}
+
+enum ListingType {
+  roofing,
+  exterior,
+  structure,
+  electrical,
+  heating,
+  cooling,
+  insulation,
+  plumbing,
+  interior,
 }
 
 class Listing {
@@ -16,6 +28,7 @@ class Listing {
   final double price;
   final List<String> imageUrls;
   final ListingStatus listingStatus;
+  final ListingType listingType;
   final Timestamp createdDate;
 
   Listing({
@@ -26,6 +39,7 @@ class Listing {
     required this.price,
     required this.imageUrls,
     required this.listingStatus,
+    required this.listingType,
     required this.createdDate,
   });
 
@@ -45,6 +59,7 @@ class Listing {
           ?.map((url) => url as String)
           .toList() ?? [],
       listingStatus: _listingStatusFromInt(map?['listingStatus'] as int? ?? 0),
+      listingType: _listingTypeFromInt(map?['listingType'] as int? ?? 0),
       createdDate: map?['createdDate'] as Timestamp? ?? Timestamp.now(),
     );
   }
@@ -58,14 +73,22 @@ class Listing {
       'price': price,
       'imageUrls': imageUrls,
       'listingStatus': listingStatus.index,
+      'listingType': listingType.index,
       'createdDate': createdDate,
     };
   }
 
   static ListingStatus _listingStatusFromInt(int statusInt) {
     if (statusInt < 0 || statusInt >= ListingStatus.values.length) {
-      return ListingStatus.draft; // default to draft
+      return ListingStatus.draft;
     }
     return ListingStatus.values[statusInt];
+  }
+
+  static ListingType _listingTypeFromInt(int typeInt) {
+    if (typeInt < 0 || typeInt >= ListingType.values.length) {
+      return ListingType.roofing;
+    }
+    return ListingType.values[typeInt];
   }
 }
