@@ -78,8 +78,10 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/1.tflite
+    - assets/models/1.tflite
+    - assets/models/labels.txt
     - assets/test_image.jpg
+    - assets/flutter_logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
