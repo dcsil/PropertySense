@@ -21,6 +21,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+import 'package:object_detect_test/ml/model_loader.dart';
+import 'package:object_detect_test/ml/home_repair_detector.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -35,7 +37,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   // Camera and model components
   CameraController? _controller;
-  Interpreter? _interpreter;
+  HomeRepairDetector? _detector;
   
   // Detection state
   List<Map<String, dynamic>>? _detections;
@@ -57,9 +59,13 @@ class _CameraScreenState extends State<CameraScreen> {
   /// Load TFLite model from assets
   Future<void> _loadModel() async {
     try {
-      _interpreter = await Interpreter.fromAsset('assets/1.tflite');
+      await ModelLoader.loadModel();
+      _detector = HomeRepairDetector(
+        interpreter: ModelLoader.interpreter,
+        labels: ModelLoader.labels,
+      );
       setState(() => _isModelLoaded = true);
-      print('✓ Model loaded successfully');
+      print('✓ Home repair detector ready');
     } catch (e) {
       print('✗ Error loading model: $e');
     }
@@ -97,16 +103,15 @@ class _CameraScreenState extends State<CameraScreen> {
   /// Process each camera frame for live object detection
   Future<void> _processCameraFrame(CameraImage cameraImage) async {
     // Skip if model not ready or already processing
-    if (_interpreter == null || _isDetecting) return;
+    if (_detector == null || _isDetecting) return;
     
     _isDetecting = true;
     
     try {
       // Get model input requirements
-      final inputShape = _interpreter!.getInputTensor(0).shape;
+      final inputShape = ModelLoader.interpreter.getInputTensor(0).shape;
       final inputHeight = inputShape[1];
       final inputWidth = inputShape[2];
-      // print('inputShape: $inputShape');    // [1, 320, 320, 3]
       
       // Convert camera image to RGB (handles both iOS BGRA and Android YUV420)
       final img.Image? rgbImage = _convertYUV420ToImage(cameraImage);
@@ -114,20 +119,13 @@ class _CameraScreenState extends State<CameraScreen> {
         _isDetecting = false;
         return;
       }
-      // print('rgbImage: $rgbImage');       // Image(480, 640, uint8, 3)
       
-      // Resize to model input size
-      final resizedImage = img.copyResize(rgbImage, 
-        width: inputWidth, 
-        height: inputHeight
-      );
-      
-      // Convert to Float32List normalized [0-1] and reshape to [1, 320, 320, 3]
-      final inputBytes = _imageToFloat32List(resizedImage, inputHeight, inputWidth);
+      // Preprocess image using detector
+      final inputBytes = _detector!.preprocessImage(rgbImage, inputWidth);
       final input = inputBytes.reshape([1, inputHeight, inputWidth, 3]);
       
-      // Prepare output buffer [1, 6300, 85]
-      final outputShape = _interpreter!.getOutputTensor(0).shape;
+      // Prepare output buffer
+      final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
       final output = List.generate(
         outputShape[0],
         (i) => List.generate(
@@ -137,10 +135,10 @@ class _CameraScreenState extends State<CameraScreen> {
       );
       
       // Run inference
-      _interpreter!.run(input, output);
+      ModelLoader.interpreter.run(input, output);
       
-      // Process results and update UI
-      final detections = _processYOLOOutput(output);
+      // Process results using detector
+      final detections = _detector!.processOutput(output);
       if (mounted) {
         setState(() => _detections = detections);
       }
@@ -275,7 +273,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   /// Run detection on a static image (backup mode only)
   Future<void> _detectObjectsInStaticImage(Uint8List imageBytes) async {
-    if (_interpreter == null) return;
+    if (_detector == null) return;
 
     setState(() => _isDetecting = true);
 
@@ -284,19 +282,16 @@ class _CameraScreenState extends State<CameraScreen> {
       final image = img.decodeImage(imageBytes);
       if (image == null) throw Exception('Failed to decode image');
 
-      // Get model requirements and resize
-      final inputShape = _interpreter!.getInputTensor(0).shape;
-      final resizedImage = img.copyResize(image, 
-        width: inputShape[2], 
-        height: inputShape[1]
-      );
+      // Get model requirements
+      final inputShape = ModelLoader.interpreter.getInputTensor(0).shape;
+      final inputSize = inputShape[1]; // Assume square input
 
-      // Convert to model input format and reshape to [1, height, width, 3]
-      final inputBytes = _imageToFloat32List(resizedImage, inputShape[1], inputShape[2]);
-      final input = inputBytes.reshape([1, inputShape[1], inputShape[2], 3]);
+      // Preprocess image using detector
+      final inputBytes = _detector!.preprocessImage(image, inputSize);
+      final input = inputBytes.reshape([1, inputSize, inputSize, 3]);
 
       // Prepare output buffer
-      final outputShape = _interpreter!.getOutputTensor(0).shape;
+      final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
       final output = List.generate(
         outputShape[0],
         (i) => List.generate(
@@ -306,12 +301,12 @@ class _CameraScreenState extends State<CameraScreen> {
       );
 
       // Run inference
-      _interpreter!.run(input, output);
+      ModelLoader.interpreter.run(input, output);
 
-      // Update UI with results
-      setState(() => _detections = _processYOLOOutput(output));
+      // Process results using detector
+      setState(() => _detections = _detector!.processOutput(output));
       
-      print('Found ${_detections?.length ?? 0} objects');
+      print('Found ${_detections?.length ?? 0} home repair issues');
     } catch (e) {
       print('Detection error: $e');
     } finally {
@@ -319,109 +314,11 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  /// Convert Image to Float32List normalized [0-1]
-  Float32List _imageToFloat32List(img.Image image, int height, int width) {
-    final buffer = Float32List(1 * height * width * 3);
-    int pixelIndex = 0;
-
-    for (int h = 0; h < height; h++) {
-      for (int w = 0; w < width; w++) {
-        final pixel = image.getPixel(w, h);
-        buffer[pixelIndex++] = pixel.r / 255.0;
-        buffer[pixelIndex++] = pixel.g / 255.0;
-        buffer[pixelIndex++] = pixel.b / 255.0;
-      }
-    }
-    
-    return buffer;
-  }
-
-  // ==================== YOLO OUTPUT PROCESSING ====================
-  
-  /// Process YOLO model output [1, 6300, 85] into detections
-  /// Format: 4 bbox (cx,cy,w,h) + 1 objectness + 80 COCO classes
-  List<Map<String, dynamic>> _processYOLOOutput(List<dynamic> output) {
-    final List<Map<String, dynamic>> detections = [];
-    
-    if (output.isEmpty) return detections;
-    
-    const confidenceThreshold = 0.5;
-    const maxDetections = 10;
-    
-    // COCO dataset class names
-    const classNames = [
-      'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
-      'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
-      'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
-      'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-      'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-      'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-      'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
-      'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse',
-      'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
-      'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
-    ];
-    
-    try {
-      final batch = output[0] as List;
-      
-      for (var detection in batch) {
-        if ((detection as List).length < 85) continue;
-        
-        // Extract bbox (center format)
-        final cx = detection[0] as double;
-        final cy = detection[1] as double;
-        final w = detection[2] as double;
-        final h = detection[3] as double;
-        final objectness = detection[4] as double;
-        
-        // Find best class
-        double maxScore = 0.0;
-        int maxIndex = 0;
-        
-        for (int i = 5; i < detection.length; i++) {
-          final score = detection[i] as double;
-          if (score > maxScore) {
-            maxScore = score;
-            maxIndex = i - 5;
-          }
-        }
-        
-        // Calculate confidence and filter
-        final confidence = objectness * maxScore;
-        if (confidence < confidenceThreshold) continue;
-        
-        // Convert to corner format [x, y, width, height] normalized
-        detections.add({
-          'label': maxIndex < classNames.length ? classNames[maxIndex] : 'Object',
-          'confidence': confidence,
-          'bbox': [
-            (cx - w / 2).clamp(0.0, 1.0),
-            (cy - h / 2).clamp(0.0, 1.0),
-            w.clamp(0.0, 1.0),
-            h.clamp(0.0, 1.0),
-          ],
-        });
-      }
-      
-      // Sort by confidence and limit
-      detections.sort((a, b) => 
-        (b['confidence'] as double).compareTo(a['confidence'] as double));
-      
-      return detections.length > maxDetections 
-          ? detections.sublist(0, maxDetections) 
-          : detections;
-          
-    } catch (e) {
-      print('YOLO processing error: $e');
-      return [];
-    }
-  }
 
   @override
   void dispose() {
     _controller?.dispose();
-    _interpreter?.close();
+    ModelLoader.dispose();
     super.dispose();
   }
 
