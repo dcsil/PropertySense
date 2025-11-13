@@ -5,7 +5,7 @@ class ModelLoader {
   static Interpreter? _interpreter;
   static List<String>? _labels;
   
-  static Future<void> loadModel({String modelPath = 'assets/models/1.tflite'}) async {
+  static Future<void> loadModel({String modelPath = 'assets/models/trained_model.tflite'}) async {
     try {
       _interpreter = await Interpreter.fromAsset(modelPath);
       print('✓ Model loaded successfully');
