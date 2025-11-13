@@ -26,4 +26,5 @@ abstract class UserRepository {
 
 abstract class ListingRepository {
   Future<Result<List<Listing>>> getListings(String uid);
+  Future<Result<void>> createListing(Listing listing);
 }

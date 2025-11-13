@@ -26,4 +26,15 @@ class ListingRepositoryRemote implements ListingRepository {
       return Failure('Failed to fetch listings for user: $e');
     }
   }
+
+  @override
+  Future<Result<void>> createListing(Listing listing) async {
+    try {
+      // This is same as put
+      await _firestore.collection('users').doc(listing.id).set(listing.toFirestore());
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to create user document: $e');
+    }
+  }
 } 
