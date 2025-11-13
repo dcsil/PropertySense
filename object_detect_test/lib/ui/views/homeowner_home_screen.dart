@@ -1,12 +1,14 @@
 
 import 'package:flutter/material.dart';
+import 'package:object_detect_test/utils/widget_keys.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeOwnerHomeScreen extends StatelessWidget {
+  const HomeOwnerHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: WidgetKeys.homeOwnerHomePage,
       appBar: AppBar(
         title: const Text('Home Page'),
       ),

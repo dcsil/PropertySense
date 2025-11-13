@@ -12,12 +12,15 @@ class UserRepositoryRemote implements UserRepository {
         _authRepo = authRepo;
 
   @override
+  User? currentUser;
+
+  @override
   Stream<Result<User?>> userStateChanges() {
     return _authRepo.authStateChanges().asyncMap((authResult) async {
       return switch (authResult) {
-        Success(value: final auth) when auth == null => Success<User?>(null),
+        Success(value: final auth) when auth == null => Success<User?>(currentUser = null),
 
-        Success(value: final auth) => await _fetchUser(auth!),
+        Success(value: final auth) => await fetchUser(auth!.id),
 
         Failure(message: final message) => Failure<User?>(
           'Auth error: $message',
@@ -26,22 +29,35 @@ class UserRepositoryRemote implements UserRepository {
     });
   }
 
-  Future<Result<User?>> _fetchUser(Auth auth) async {
+  @override
+  Future<Result<void>> createUserDocument(User user) async {
     try {
-      final doc = await _firestore.collection('users').doc(auth.userID).get();
+      // This is same as put
+      await _firestore.collection('users').doc(user.id).set(user.toFirestore());
+      currentUser = user;
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to create user document: $e');
+    }
+  }
 
-      if (!doc.exists) {
+
+  @override
+  Future<Result<User?>> fetchUser(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+
+      // TODO this is when user is logged in but user document is missing
+      // we just return auth but no user since this is for when user is registering 
+      if (!doc.exists || doc.data() == null) {
         return Success(null);
       }
 
-      final data = doc.data();
-      if (data == null) {
-        return Failure('Could not find user ${auth.userID} in firestore');
-      }
-
-      final user = User.fromFirestore(doc, null);
+      final user = await User.fromFirestore(doc, null);
+      currentUser = user;
       return Success(user);
     } catch (e) {
+      print(e);
       return Failure('Failed to fetch user: $e');
     }
   }

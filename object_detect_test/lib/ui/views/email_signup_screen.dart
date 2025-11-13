@@ -1,23 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:object_detect_test/ui/viewmodels/login_viewmodel.dart';
+import 'package:object_detect_test/data/repos/repositories.dart';
+import 'package:object_detect_test/ui/viewmodels/email_signup_viewmodel.dart';
 import 'package:object_detect_test/utils/widget_keys.dart';
 import 'package:provider/provider.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class EmailSignupScreen extends StatelessWidget {
+  const EmailSignupScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => EmailSignupViewModel(
+        context.read<AuthRepository>()
+      ),
+      child: EmailSignupScreenContent()
+      
+    );
+}
+}
+
+class EmailSignupScreenContent extends StatelessWidget {
+
+  const EmailSignupScreenContent({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<LoginViewModel>();
+    final viewModel = context.watch<EmailSignupViewModel>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (viewModel.currentAuth != null) {
-        if (viewModel.currentAuth!.isEmailVerified) {
-          context.go('/register');
-        } else {
-          context.go('/verify-email');
-        }
+        context.go('/verify-email');
       }
     });
 
@@ -48,7 +60,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to continue',
+                    'Sign up with your email and password.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -61,6 +73,7 @@ class LoginScreen extends StatelessWidget {
                     key: WidgetKeys.emailField,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
+
                     onChanged: (value) => viewModel.email = value,
                     decoration: const InputDecoration(
                       labelText: 'Email',
@@ -86,7 +99,7 @@ class LoginScreen extends StatelessWidget {
                     obscureText: viewModel.isPasswordVisible ? false : true,
                     textInputAction: TextInputAction.done,
                     onChanged: (value) => viewModel.password = value,
-                    onFieldSubmitted: (_) => viewModel.login(),
+                    onFieldSubmitted: (_) => viewModel.signUpWithEmail(),
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: 'Enter your password',
@@ -111,25 +124,11 @@ class LoginScreen extends StatelessWidget {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 8),
-
-                  // Forgot password link
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      // Navigate to forgot password screen
-                      onPressed: () {
-                        Navigator.of(context).pushNamed('/forgot-password');
-                      },
-                      child: const Text('Forgot password?'),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
 
                   // Login button
                   FilledButton(
                     key: WidgetKeys.loginButton,
-                    onPressed: viewModel.isLoading ? null : viewModel.login,
+                    onPressed: viewModel.isLoading ? null : viewModel.signUpWithEmail,
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -142,72 +141,9 @@ class LoginScreen extends StatelessWidget {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('Sign In'),
+                        : const Text('Create Account'),
                   ),
                   const SizedBox(height: 24),
-
-                  // Divider with "or"
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'or',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Google sign-in button
-                  OutlinedButton.icon(
-                    onPressed: viewModel.isLoading
-                        ? null
-                        : viewModel.loginWithGoogle,
-                    icon: Image.asset(
-                      'assets/google_logo.png', // You'll need to add this
-                      height: 24,
-                      width: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.g_mobiledata, size: 24);
-                      },
-                    ),
-                    label: const Text('Continue with Google'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Apple sign-in button
-                  OutlinedButton.icon(
-                    onPressed: viewModel.isLoading
-                        ? null
-                        : viewModel.loginWithApple,
-                    icon: const Icon(Icons.apple, size: 24),
-                    label: const Text('Continue with Apple'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Sign up link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Don't have an account? "),
-                      TextButton(
-                        onPressed: () {
-                          context.go('/email-signup');
-                        },
-                        child: const Text('Sign Up'),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
