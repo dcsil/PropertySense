@@ -48,6 +48,7 @@ dependencies:
   # TODO: add androidX support
   # https://pub.dev/packages/geocoding#usage
   geocoding: ^4.0.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
