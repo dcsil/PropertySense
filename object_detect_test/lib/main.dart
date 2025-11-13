@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:object_detect_test/data/repos/listing/listing_remote.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/data/repos/auth/auth_repository_remote.dart';
 import 'package:object_detect_test/data/repos/user/user_repository_remote.dart';
@@ -20,6 +21,10 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<ListingRepository>(
+          create: (_) =>
+              ListingRepositoryRemote(firestore: FirebaseFirestore.instance),
+        ),
         Provider<AuthRepository>(
           create: (_) =>
               AuthRepositoryRemote(firebaseAuth: fb_auth.FirebaseAuth.instance),
