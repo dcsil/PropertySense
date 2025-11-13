@@ -27,4 +27,7 @@ abstract class UserRepository {
 abstract class ListingRepository {
   Future<Result<List<Listing>>> getListings(String uid);
   Future<Result<void>> createListing(Listing listing);
+  Future<Result<Listing>> getListing(String listingId);
+  Future<Result<void>> deleteListing(String listingId);
+  Future<Result<void>> updateListingStatus(String listingId, ListingStatus newStatus);
 }

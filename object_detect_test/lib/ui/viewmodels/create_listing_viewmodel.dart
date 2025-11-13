@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/domain/models/listing_model.dart';
+import 'package:object_detect_test/utils/result.dart';
+import 'package:object_detect_test/utils/toaster.dart';
 
 class CreateListingViewModel extends ChangeNotifier {
   final ListingRepository _listingRepository;
@@ -143,6 +145,22 @@ class CreateListingViewModel extends ChangeNotifier {
 
   // Create listing
   Future<bool> createListing() async {
+  // Debug: print current state for troubleshooting
+  debugPrint('CreateListingViewModel.createListing - state:');
+  debugPrint('  currentStep: $_currentStep');
+  debugPrint('  currentUid: $_userId');
+  debugPrint('  isLoading: $_isLoading');
+  debugPrint('  errorMessage: $_errorMessage');
+  debugPrint('  listingType: $_listingType');
+  debugPrint('  location: $_location');
+  debugPrint('  title: $_title');
+  debugPrint('  description: $_description');
+  debugPrint('  price: $_price');
+  debugPrint('  images count: ${_images.length}');
+  for (var i = 0; i < _images.length; i++) {
+    final img = _images[i];
+    debugPrint('    [$i] name=${img.name}, path=${img.path}');
+  }
     if (_listingType == null) return false;
 
     _isLoading = true;
@@ -166,13 +184,20 @@ class CreateListingViewModel extends ChangeNotifier {
         createdDate: Timestamp.now(),
       );
 
-      await _listingRepository.createListing(listing);
+      final result = await _listingRepository.createListing(listing);
+      if (result is Failure) {
+        Toaster.showErrorFromFailure(result);
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
       
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = 'Failed to create listing: $e';
+      Toaster.showError(_errorMessage!);
       _isLoading = false;
       notifyListeners();
       return false;
