@@ -309,7 +309,7 @@ class ListingDetailScreenContent extends StatelessWidget {
           FilledButton.icon(
             onPressed: () => _updateStatus(context, viewModel, ListingStatus.done),
             icon: const Icon(Icons.check_circle),
-            label: const Text('Mark as Sold'),
+            label: const Text('Mark as Done'),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),

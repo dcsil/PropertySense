@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/domain/models/listing_model.dart';
@@ -27,13 +28,17 @@ class CreateListingViewModel extends ChangeNotifier {
   String _title = '';
   String _description = '';
   double? _price;
+  Location location = Location(
+    latitude: 0,
+    longitude: 0,
+    timestamp: DateTime.now(),
+  );
 
   // Getters
   int get currentStep => _currentStep;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   ListingType? get listingType => _listingType;
-  String get location => _location;
   List<XFile> get images => _images;
   String get title => _title;
   String get description => _description;

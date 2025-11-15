@@ -81,14 +81,14 @@ class User {
     }
   }
 
-  static Future<Placemark> _placemarkFromGeoPoint(GeoPoint geoPoint) async {
+  static Future<Placemark> placemarkFromGeoPoint(GeoPoint geoPoint) async {
     // TODO:
     // Pray that this always returns at least one placemark
     List<Placemark> placemarks = await placemarkFromCoordinates(geoPoint.latitude, geoPoint.longitude);
     return placemarks.first;
   }
 
-  static Location _locationFromGeoPoint(GeoPoint geoPoint) {
+  static Location locationFromGeoPoint(GeoPoint geoPoint) {
     return Location(
       latitude: geoPoint.latitude,
       longitude: geoPoint.longitude,
