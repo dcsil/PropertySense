@@ -26,7 +26,7 @@ void main() {
     group('authStateChanges', () {
       test('should emit Success with null when user is null', () async {
         // Arrange
-        when(mockFirebaseAuth.authStateChanges())
+        when(mockFirebaseAuth.userChanges())
             .thenAnswer((_) => Stream.value(null));
 
         // Act
@@ -48,10 +48,11 @@ void main() {
         final testUserId = 'test-user-id';
         final testCreationTime = DateTime(2024, 1, 1);
 
+        when(mockUser.email).thenReturn('test@example.com');
         when(mockUser.uid).thenReturn(testUserId);
         when(mockUser.metadata).thenReturn(mockUserMetadata);
         when(mockUserMetadata.creationTime).thenReturn(testCreationTime);
-        when(mockFirebaseAuth.authStateChanges())
+        when(mockFirebaseAuth.userChanges())
             .thenAnswer((_) => Stream.value(mockUser));
 
         // Act
@@ -76,11 +77,12 @@ void main() {
         // Arrange
         final testUserId = 'test-user-id';
 
-        when(mockUser.uid).thenReturn(testUserId);
-        when(mockUser.metadata).thenReturn(mockUserMetadata);
-        when(mockUserMetadata.creationTime).thenReturn(null);
-        when(mockFirebaseAuth.authStateChanges())
-            .thenAnswer((_) => Stream.value(mockUser));
+    when(mockUser.uid).thenReturn(testUserId);
+    when(mockUser.email).thenReturn('test@example.com');
+    when(mockUser.metadata).thenReturn(mockUserMetadata);
+    when(mockUserMetadata.creationTime).thenReturn(null);
+    when(mockFirebaseAuth.userChanges())
+      .thenAnswer((_) => Stream.value(mockUser));
 
         // Act
         final stream = authRepository.authStateChanges();
@@ -118,7 +120,10 @@ void main() {
         when(mockUser2.metadata).thenReturn(mockMetadata2);
         when(mockMetadata2.creationTime).thenReturn(testCreationTime2);
 
-        when(mockFirebaseAuth.authStateChanges()).thenAnswer(
+        when(mockUser1.email).thenReturn('user1@example.com');
+        when(mockUser2.email).thenReturn('user2@example.com');
+
+        when(mockFirebaseAuth.userChanges()).thenAnswer(
           (_) => Stream.fromIterable([mockUser1, null, mockUser2]),
         );
 
@@ -156,8 +161,8 @@ void main() {
       test('should handle stream errors gracefully', () async {
         // Arrange
         final testError = Exception('Firebase error');
-        when(mockFirebaseAuth.authStateChanges())
-            .thenAnswer((_) => Stream.error(testError));
+    when(mockFirebaseAuth.userChanges())
+      .thenAnswer((_) => Stream.error(testError));
 
         // Act
         final stream = authRepository.authStateChanges();
@@ -174,7 +179,7 @@ void main() {
       test('should return Success with null for null user', () {
         // This is tested indirectly through authStateChanges,
         // but we can verify the behavior
-        when(mockFirebaseAuth.authStateChanges())
+        when(mockFirebaseAuth.userChanges())
             .thenAnswer((_) => Stream.value(null));
 
         final stream = authRepository.authStateChanges();
@@ -190,10 +195,11 @@ void main() {
         final testUserId = 'test-id';
         final testCreationTime = DateTime(2024, 1, 1);
 
+        when(mockUser.email).thenReturn('test@example.com');
         when(mockUser.uid).thenReturn(testUserId);
         when(mockUser.metadata).thenReturn(mockUserMetadata);
         when(mockUserMetadata.creationTime).thenReturn(testCreationTime);
-        when(mockFirebaseAuth.authStateChanges())
+        when(mockFirebaseAuth.userChanges())
             .thenAnswer((_) => Stream.value(mockUser));
 
         // Act
@@ -208,11 +214,12 @@ void main() {
 
       test('should return Failure when creationTime is null', () async {
         // Arrange
-        when(mockUser.uid).thenReturn('test-id');
-        when(mockUser.metadata).thenReturn(mockUserMetadata);
-        when(mockUserMetadata.creationTime).thenReturn(null);
-        when(mockFirebaseAuth.authStateChanges())
-            .thenAnswer((_) => Stream.value(mockUser));
+    when(mockUser.uid).thenReturn('test-id');
+    when(mockUser.email).thenReturn('test@example.com');
+    when(mockUser.metadata).thenReturn(mockUserMetadata);
+    when(mockUserMetadata.creationTime).thenReturn(null);
+    when(mockFirebaseAuth.userChanges())
+      .thenAnswer((_) => Stream.value(mockUser));
 
         // Act
         final stream = authRepository.authStateChanges();

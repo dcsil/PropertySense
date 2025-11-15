@@ -37,6 +37,7 @@ class _RegistrationScreenContent extends StatelessWidget {
     final viewModel = context.watch<RegistrationViewModel>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      print('hi');
       if (viewModel.currentUser == null) {
         return;
       }
@@ -138,8 +139,7 @@ class _ProgressIndicator extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+  @override Widget build(BuildContext context) {
     final current = _getCurrentStepNumber(currentStep);
     final total = _getTotalSteps(currentStep);
     final progress = current / total;

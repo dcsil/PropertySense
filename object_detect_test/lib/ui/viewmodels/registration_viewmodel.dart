@@ -266,6 +266,8 @@ class RegistrationViewModel extends ChangeNotifier {
       Toaster.showErrorFromFailure(fetchUserResponse as Failure);
       return;
     }
+    fetchUserResponse as Success<User?>;
+    currentUser = fetchUserResponse.value;
     isLoading = false;
     notifyListeners();
   }
