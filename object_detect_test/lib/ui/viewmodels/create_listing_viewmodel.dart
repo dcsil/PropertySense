@@ -12,8 +12,6 @@ class CreateListingViewModel extends ChangeNotifier {
   final String _userId;
   
   CreateListingViewModel(this._listingRepository, this._userId) {
-    // Set default location when initialized
-    _location = _getDefaultLocation();
   }
 
   // State
@@ -23,7 +21,6 @@ class CreateListingViewModel extends ChangeNotifier {
 
   // Listing fields
   ListingType? _listingType;
-  String _location = '';
   List<XFile> _images = [];
   String _title = '';
   String _description = '';
@@ -49,7 +46,7 @@ class CreateListingViewModel extends ChangeNotifier {
       case 0:
         return _listingType != null;
       case 1:
-        return _location.isNotEmpty;
+        return location.latitude != 0 && location.longitude != 0;
       case 2:
         return _images.isNotEmpty;
       case 3:
@@ -64,11 +61,6 @@ class CreateListingViewModel extends ChangeNotifier {
   // Setters
   void setListingType(ListingType type) {
     _listingType = type;
-    notifyListeners();
-  }
-
-  void setLocation(String location) {
-    _location = location;
     notifyListeners();
   }
 
@@ -157,7 +149,6 @@ class CreateListingViewModel extends ChangeNotifier {
   debugPrint('  isLoading: $_isLoading');
   debugPrint('  errorMessage: $_errorMessage');
   debugPrint('  listingType: $_listingType');
-  debugPrint('  location: $_location');
   debugPrint('  title: $_title');
   debugPrint('  description: $_description');
   debugPrint('  price: $_price');
@@ -187,6 +178,7 @@ class CreateListingViewModel extends ChangeNotifier {
         listingStatus: ListingStatus.draft,
         listingType: _listingType!,
         createdDate: Timestamp.now(),
+        location: location,
       );
 
       final result = await _listingRepository.createListing(listing);

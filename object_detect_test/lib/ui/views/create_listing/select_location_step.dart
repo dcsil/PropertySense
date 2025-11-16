@@ -17,7 +17,6 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
   List<Placemark> _placemarks = [];
   bool _isSearching = false;
   Location? _selectedLocation;
-  Placemark? _selectedPlacemark;
 
   @override
   void dispose() {
@@ -86,7 +85,6 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
   void _selectAddress(int index) {
     setState(() {
       _selectedLocation = _searchResults[index];
-      _selectedPlacemark = _placemarks[index];
     });
 
     final viewModel = context.read<CreateListingViewModel>();
@@ -151,7 +149,6 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
                           _searchResults = [];
                           _placemarks = [];
                           _selectedLocation = null;
-                          _selectedPlacemark = null;
                         });
                       },
                     )

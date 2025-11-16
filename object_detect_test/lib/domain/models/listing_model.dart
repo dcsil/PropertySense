@@ -66,7 +66,12 @@ class Listing {
       listingType: _listingTypeFromInt(map?['listingType'] as int? ?? 0),
       createdDate: map?['createdDate'] as Timestamp? ?? Timestamp.now(),
       // TODO: don't make location from geopoint under User
-      location: User.locationFromGeoPoint(map?['location'] as GeoPoint),
+      location: (() {
+        final geo = map?['location'] as GeoPoint?;
+        return geo != null
+        ? User.locationFromGeoPoint(geo)
+        : Location(latitude: 0.0, longitude: 0.0, timestamp: Timestamp.now().toDate());
+      })(),
     );
   }
 
