@@ -17,11 +17,42 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
   List<Placemark> _placemarks = [];
   bool _isSearching = false;
   Location? _selectedLocation;
+  bool _initialized = false;
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+
+    final viewModel = context.read<CreateListingViewModel>();
+    final loc = viewModel.location;
+    if (loc != null) {
+      // set selected location and try to get its placemark/address
+      _selectedLocation = loc;
+      placemarkFromCoordinates(loc.latitude, loc.longitude).then((plist) {
+        final placemark = plist.isNotEmpty ? plist.first : null;
+        setState(() {
+          _searchResults = [loc];
+          _placemarks = placemark != null ? [placemark] : [];
+          _searchController.text =
+              placemark != null ? _formatAddress(placemark) : '';
+        });
+      }).catchError((e) {
+        debugPrint('Error getting initial placemark: $e');
+        setState(() {
+          _searchResults = [loc];
+          _placemarks = [];
+          _searchController.text = '';
+        });
+      });
+    }
   }
 
   Future<void> _searchAddress(String query) async {
@@ -40,7 +71,7 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
     try {
       // Get locations from fuzzy address search
       final locations = await locationFromAddress(query);
-      
+
       // Get placemarks for each location
       final placemarks = <Placemark>[];
       for (final location in locations) {
@@ -70,7 +101,7 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
         _placemarks = [];
         _isSearching = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -93,7 +124,7 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
 
   String _formatAddress(Placemark placemark) {
     final parts = <String>[];
-    
+
     if (placemark.street?.isNotEmpty ?? false) {
       parts.add(placemark.street!);
     }
@@ -106,7 +137,7 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
     if (placemark.postalCode?.isNotEmpty ?? false) {
       parts.add(placemark.postalCode!);
     }
-    
+
     return parts.join(', ');
   }
 
@@ -219,7 +250,9 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
                       itemCount: _searchResults.length,
                       itemBuilder: (context, index) {
                         final location = _searchResults[index];
-                        final placemark = _placemarks[index];
+                        final placemark = _placemarks.length > index
+                            ? _placemarks[index]
+                            : Placemark();
                         final isSelected = _selectedLocation == location;
 
                         return Card(
@@ -238,7 +271,9 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
                                   : null,
                             ),
                             title: Text(
-                              _formatAddress(placemark),
+                              placemark.street != null && placemark.street!.isNotEmpty
+                                  ? _formatAddress(placemark)
+                                  : '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
                               style: TextStyle(
                                 fontWeight: isSelected
                                     ? FontWeight.bold

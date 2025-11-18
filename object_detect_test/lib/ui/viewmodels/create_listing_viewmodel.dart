@@ -9,10 +9,11 @@ import 'package:object_detect_test/utils/toaster.dart';
 
 class CreateListingViewModel extends ChangeNotifier {
   final ListingRepository _listingRepository;
-  final String _userId;
+  final UserRepository _userRepository;
   
-  CreateListingViewModel(this._listingRepository, this._userId) {
-  }
+  CreateListingViewModel(this._listingRepository, this._userRepository); 
+
+  late String _userId = _userRepository.currentUser?.id ?? '';
 
   // State
   int _currentStep = 0;
@@ -25,11 +26,9 @@ class CreateListingViewModel extends ChangeNotifier {
   String _title = '';
   String _description = '';
   double? _price;
-  Location location = Location(
-    latitude: 0,
-    longitude: 0,
-    timestamp: DateTime.now(),
-  );
+  late Location location = _userRepository.currentUser != null
+      ? _userRepository.currentUser!.location
+      : Location(latitude: 0, longitude: 0, timestamp: DateTime.now());
 
   // Getters
   int get currentStep => _currentStep;
