@@ -65,5 +65,15 @@
 				</array>
 			</dict>
 		</array>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>We need your location to show nearby places</string>
+		
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>We need your location to track your route even when the app is in background</string>
+		
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>location</string>
+		</array>
 	</dict>
 </plist>

@@ -62,7 +62,7 @@ class AuthRepositoryLocal implements AuthRepository {
         'Could not map firebase user to domain Auth: creationTime is null',
       );
     }
-    return Success(Auth(id: user.uid, email: email, createdDate: created));
+    return Success(Auth(id: user.uid, email: email, createdDate: created, isEmailVerified: user.emailVerified));
   }
 
   @override
@@ -106,5 +106,10 @@ class AuthRepositoryLocal implements AuthRepository {
     } catch (e) {
       return Failure('Failed to send verification email: $e');
     }
+  }
+  
+  @override
+  set firebaseAuthInstance(FirebaseAuth _firebaseAuthInstance) {
+    // TODO: implement firebaseAuthInstance
   }
 }

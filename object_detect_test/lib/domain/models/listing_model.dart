@@ -104,3 +104,24 @@ class Listing {
     return ListingType.values[typeInt];
   }
 }
+
+enum ListingSortByPreference {
+  priceLowToHigh,
+  priceHighToLow,
+  newestFirst,
+  oldestFirst,
+}
+
+class ListingQueryPreferences {
+  ListingType? listingType;
+  double radiusInKm;
+  int minPrice;
+  int maxPrice;
+
+  ListingQueryPreferences({
+    this.listingType,
+    this.radiusInKm = 5.0,
+    this.minPrice = 0,
+    this.maxPrice = 1000000,
+  });
+}
