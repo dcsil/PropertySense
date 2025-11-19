@@ -21,8 +21,9 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
   @override
   late Location currentContractorLocation;
 
+  // TODO get this from user data:
   @override
-  late ListingQueryPreferences listingQueryPreferences;
+  late ListingQueryPreferences listingQueryPreferences = ListingQueryPreferences(radiusInKm: 1);
 
   // Track seen listings
   final Set<String> _seenListingIds = {};
@@ -60,6 +61,7 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
       longitude: locationData.longitude!,
       timestamp: DateTime.now(),
     );
+    print(currentContractorLocation);
 
     // Keep a reference to the location service so we can listen/cancel later
     _locationService = location;
@@ -73,6 +75,7 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
             longitude: currentLocation.longitude!,
             timestamp: DateTime.now(),
           );
+          print("updated location: $currentContractorLocation");
           
           // Check if we should fetch new listings
           _checkAndFetchListings();

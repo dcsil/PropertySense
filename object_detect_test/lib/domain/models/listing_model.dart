@@ -113,13 +113,22 @@ enum ListingSortByPreference {
 }
 
 class ListingQueryPreferences {
-  ListingType? listingType;
+  List<ListingType>? listingType;
   double radiusInKm;
   int minPrice;
   int maxPrice;
 
   ListingQueryPreferences({
-    this.listingType,
+    this.listingType = const [
+      ListingType.exterior,
+      ListingType.structure,
+      ListingType.electrical,
+      ListingType.heating,
+      ListingType.cooling,
+      ListingType.insulation,
+      ListingType.plumbing,
+      ListingType.interior,
+    ],
     this.radiusInKm = 5.0,
     this.minPrice = 0,
     this.maxPrice = 1000000,
