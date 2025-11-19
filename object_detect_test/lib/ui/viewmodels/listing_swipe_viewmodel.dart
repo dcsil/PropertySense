@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
@@ -10,26 +12,20 @@ class ListingSwipeViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
   
   ListingSwipeViewModel(this._listingRepository, this._userRepository) {
-    _initializeLocationAndListings();
+    _initialize();
   }
 
-  List<Listing> _listings = [];
-  int _currentIndex = 0;
   bool _isLoading = false;
   String? _errorMessage;
-  final Set<String> _seenListingIds = {};
 
-  List<Listing> get listings => _listings;
-  int get currentIndex => _currentIndex;
+  StreamSubscription<List<Listing>>? _bufferSubscription;
+
+  List<Listing> get listings => _listingRepository.listingBuffer;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   Location get currentLocation => _listingRepository.currentContractorLocation;
-  Listing? get currentListing => 
-      _listings.isNotEmpty && _currentIndex < _listings.length 
-          ? _listings[_currentIndex] 
-          : null;
 
-  Future<void> _initializeLocationAndListings() async {
+  Future<void> _initialize() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -42,51 +38,35 @@ class ListingSwipeViewModel extends ChangeNotifier {
         return;
       }
 
-
       final locationResult = await _listingRepository.initializeLocation();
-
       if (locationResult is Failure) {
         Toaster.showErrorFromFailure(locationResult as Failure);
         _errorMessage = 'Failed to initialize location';
         return;
       }
 
-      await _loadListings();
+      // Initial fetch
+      await _listingRepository.getListingsWithinRadiusForBuffer();
+      
+      // Listen to buffer updates
+      _bufferSubscription = _listingRepository.bufferStream.listen((updatedListings) {
+        notifyListeners();
+      });
     } catch (e) {
       _errorMessage = 'Failed to initialize: $e';
-      _listings = [];
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> _loadListings() async {
-    try {
-      final listingResult = await _listingRepository.getListingsWithinRadiusForBuffer();
-      if (listingResult is Failure) {
-        Toaster.showErrorFromFailure(listingResult);
-        return;
-      }
-
-      // Filter out already seen listings
-      _listings = _listingRepository.listingBuffer
-          .where((listing) => !_seenListingIds.contains(listing.id))
-          .toList();
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = 'Failed to load listings: $e';
-      _listings = [];
-      notifyListeners();
-    }
-  }
-
-  void markListingAsSeen(String listingId) {
-    _seenListingIds.add(listingId);
-  }
-
   Future<void> refreshListings() async {
-    await _loadListings();
+    await _listingRepository.getListingsWithinRadiusForBuffer();
+    notifyListeners();
+  }
+
+  void markListingAsSeen(String id) async {
+    _listingRepository.markListingAsSeen(id);
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:object_detect_test/ui/views/contractor_home_screen.dart';
 import 'package:object_detect_test/ui/views/create_listing_screen.dart';
@@ -25,9 +26,15 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/listing/:id',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final listingId = state.pathParameters['id']!;
-        return ListingDetailScreen(listingId: listingId);
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: ListingDetailScreen(listingId: listingId),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return child;
+          },
+        );
       },
     ),
     GoRoute(

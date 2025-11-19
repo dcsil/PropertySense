@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:geocoding/geocoding.dart';
+import 'package:location/location.dart' as loc;
 import 'package:object_detect_test/domain/models/listing_model.dart';
 
 import '../../domain/models/auth_model.dart';
@@ -40,9 +43,12 @@ abstract class ContractorListingRepository {
   // Storing query preferences client side
   // Future<Result<List<Listing>>> getListingsFromSearchQuery(String query);
   late List<Listing> listingBuffer;
+  late Set<String> seenListings;
   late Location currentContractorLocation; 
+  late Stream<List<Listing>> bufferStream;
   Future<Result<void>> initializeLocation();
   Future<void> stopLocationUpdates();
   late ListingQueryPreferences listingQueryPreferences;
   Future<Result<void>> getListingsWithinRadiusForBuffer();
+  void markListingAsSeen(String id);
 }

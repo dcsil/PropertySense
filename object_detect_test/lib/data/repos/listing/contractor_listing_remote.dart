@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/domain/models/listing_model.dart';
@@ -11,10 +12,21 @@ import 'package:location/location.dart' as loc;
 class ContractorListingRepositoryRemote extends ContractorListingRepository {
   final FirebaseFirestore _firestore;
   ContractorListingRepositoryRemote({required FirebaseFirestore firestore})
-      : _firestore = firestore;
+      : _firestore = firestore,
+        listingBuffer = <Listing>[],
+        seenListings = <String>{};
 
   @override
   late List<Listing> listingBuffer;
+
+  @override
+  late Set<String> seenListings;
+
+  // Stream controller for buffer updates
+  final StreamController<List<Listing>> _bufferController = StreamController<List<Listing>>.broadcast();
+  
+  @override
+  Stream<List<Listing>> get bufferStream => _bufferController.stream;
 
   Location _lastFetchedCenter = Location(latitude: 0.0, longitude: 0.0, timestamp: DateTime.now());
 
@@ -25,12 +37,11 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
   @override
   late ListingQueryPreferences listingQueryPreferences = ListingQueryPreferences(radiusInKm: 1);
 
-  // Track seen listings
-  final Set<String> _seenListingIds = {};
 
   // Internal location service and subscription to keep contractor location up to date
   late loc.Location _locationService;
-  StreamSubscription<loc.LocationData>? _locationSubscription;
+
+  late StreamSubscription<loc.LocationData>? locationSubscription;
 
   /// Initialize location once and start listening for continuous updates.
   Future<Result<void>> initializeLocation() async {
@@ -46,16 +57,22 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
         return Failure('Location services are disabled.');
       }
     }
+    print('hi2');
 
     permissionGranted = await location.hasPermission();
     if (permissionGranted == loc.PermissionStatus.denied) {
+
+      print('hi3');
       permissionGranted = await location.requestPermission();
+      print('hi3');
       if (permissionGranted != loc.PermissionStatus.granted) {
         return Failure('Location permissions are denied');
       }
     }
 
+    print('hi4');
     locationData = await location.getLocation();
+    print('hi5');
     currentContractorLocation = Location(
       latitude: locationData.latitude!,
       longitude: locationData.longitude!,
@@ -67,7 +84,7 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
     _locationService = location;
 
     // Start listening for continuous location updates and update the currentContractorLocation
-    _locationSubscription = _locationService.onLocationChanged.listen(
+    locationSubscription = _locationService.onLocationChanged.listen(
       (loc.LocationData currentLocation) {
         if (currentLocation.latitude != null && currentLocation.longitude != null) {
           currentContractorLocation = Location(
@@ -94,8 +111,9 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
   /// Stop listening to location updates and release resources.
   @override
   Future<void> stopLocationUpdates() async {
-    await _locationSubscription?.cancel();
-    _locationSubscription = null;
+    await locationSubscription?.cancel();
+    locationSubscription = null;
+    await _bufferController.close();
   }
 
   /// Check distance and fetch listings if needed
@@ -106,23 +124,28 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
       currentContractorLocation.latitude,
       currentContractorLocation.longitude,
     );
+    print(distance);
 
     if (distance > 100) {
       final result = await _fetchListingsFromFirestore(currentContractorLocation);
       
       if (result is Success<List<Listing>>) {
         final List<Listing> fetchedListings = result.value;
+        print(fetchedListings);
 
         // Add only unseen listings to buffer
         for (final listing in fetchedListings) {
-          if (!_seenListingIds.contains(listing.id)) {
-            _seenListingIds.add(listing.id);
+          if (!seenListings.contains(listing.id)) {
             listingBuffer.add(listing);
           }
         }
+        print(seenListings);
+        print(listingBuffer);
 
         // Update last fetched center
         _lastFetchedCenter = currentContractorLocation;
+        // Notify listeners of buffer update
+        _bufferController.add(List.from(listingBuffer));
       }
     }
   }
@@ -149,8 +172,8 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
 
       // Add only unseen listings to buffer
       for (final listing in fetchedListings) {
-        if (!_seenListingIds.contains(listing.id)) {
-          _seenListingIds.add(listing.id);
+        if (!seenListings.contains(listing.id)) {
+          seenListings.add(listing.id);
           listingBuffer.add(listing);
         }
       }
@@ -193,13 +216,16 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
       double minLon = location.longitude - lonDelta;
       double maxLon = location.longitude + lonDelta;
 
+      print(minLat);
+      print(minLon);
+      print(maxLat);
+      print(maxLon);
+
       // Query Firestore with bounding box filters
       QuerySnapshot<Map<String, dynamic>> querySnapshot = await _firestore
           .collection('listings')
-          .where('latitude', isGreaterThanOrEqualTo: minLat)
-          .where('latitude', isLessThanOrEqualTo: maxLat)
-          .where('longitude', isGreaterThanOrEqualTo: minLon)
-          .where('longitude', isLessThanOrEqualTo: maxLon)
+          .where('location', isGreaterThanOrEqualTo: new GeoPoint(minLat, minLon))
+          .where('location', isLessThanOrEqualTo: new GeoPoint(maxLat, maxLon))
           .get();
 
       // Convert documents to Listing objects
@@ -211,5 +237,10 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
     } catch (e) {
       return Failure('Failed to fetch listings: $e');
     }
+  }
+  
+  @override
+  void markListingAsSeen(String id) {
+    seenListings.add(id);
   }
 }
