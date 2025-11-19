@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:object_detect_test/ui/views/contractor_home_screen.dart';
 import 'package:object_detect_test/ui/views/create_listing_screen.dart';
 import 'package:object_detect_test/ui/views/email_signup_screen.dart';
+import 'package:object_detect_test/ui/views/listing_detail_contractor_screen.dart';
 import 'package:object_detect_test/ui/views/listing_detail_screen.dart';
 import 'package:object_detect_test/ui/views/listing_swipe_screen.dart';
 import 'package:object_detect_test/ui/views/listings_screen.dart';
@@ -22,6 +23,20 @@ final GoRouter router = GoRouter(
       path: '/listings',
       builder: (context, state) {
         return const ListingOverviewScreen();
+      },
+    ),
+    GoRoute(
+      path: '/listing-contractor/:id',
+      pageBuilder: (context, state) {
+        final listingId = state.pathParameters['id']!;
+        final showOffer = state.uri.queryParameters['offer'] == 'true';
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: ListingDetailContractorScreen(listingId: listingId, showOfferDialog: showOffer),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return child;
+          },
+        );
       },
     ),
     GoRoute(

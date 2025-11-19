@@ -118,7 +118,7 @@ class ListingSwipeScreenContents extends StatelessWidget {
             return true;
           } else if (direction == CardSwiperDirection.right) {
             viewModel.markListingAsSeen(listing.id);
-            context.push('/send-offer/${listing.id}');
+            context.push('/listing-contractor/${listing.id}?offer=true');
             return true;
           }
           
@@ -152,7 +152,7 @@ class _SwipeableListingCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push('/listing/${listing.id}'),
+        onTap: () => context.push('/listing-contractor/${listing.id}'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
