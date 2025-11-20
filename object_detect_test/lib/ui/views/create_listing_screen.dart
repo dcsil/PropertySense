@@ -17,7 +17,7 @@ class CreateListingScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => CreateListingViewModel(
         context.read<ListingRepository>(),
-        context.read<UserRepository>().currentUser?.id ?? '',
+        context.read<UserRepository>(),
       ),
       child: const CreateListingScreenContent(),
     );

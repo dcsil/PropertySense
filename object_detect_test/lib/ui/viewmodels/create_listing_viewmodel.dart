@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/domain/models/listing_model.dart';
@@ -8,12 +9,11 @@ import 'package:object_detect_test/utils/toaster.dart';
 
 class CreateListingViewModel extends ChangeNotifier {
   final ListingRepository _listingRepository;
-  final String _userId;
+  final UserRepository _userRepository;
   
-  CreateListingViewModel(this._listingRepository, this._userId) {
-    // Set default location when initialized
-    _location = _getDefaultLocation();
-  }
+  CreateListingViewModel(this._listingRepository, this._userRepository); 
+
+  late String _userId = _userRepository.currentUser?.id ?? '';
 
   // State
   int _currentStep = 0;
@@ -22,18 +22,19 @@ class CreateListingViewModel extends ChangeNotifier {
 
   // Listing fields
   ListingType? _listingType;
-  String _location = '';
   List<XFile> _images = [];
   String _title = '';
   String _description = '';
   double? _price;
+  late Location location = _userRepository.currentUser != null
+      ? _userRepository.currentUser!.location
+      : Location(latitude: 0, longitude: 0, timestamp: DateTime.now());
 
   // Getters
   int get currentStep => _currentStep;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   ListingType? get listingType => _listingType;
-  String get location => _location;
   List<XFile> get images => _images;
   String get title => _title;
   String get description => _description;
@@ -44,7 +45,7 @@ class CreateListingViewModel extends ChangeNotifier {
       case 0:
         return _listingType != null;
       case 1:
-        return _location.isNotEmpty;
+        return location.latitude != 0 && location.longitude != 0;
       case 2:
         return _images.isNotEmpty;
       case 3:
@@ -59,11 +60,6 @@ class CreateListingViewModel extends ChangeNotifier {
   // Setters
   void setListingType(ListingType type) {
     _listingType = type;
-    notifyListeners();
-  }
-
-  void setLocation(String location) {
-    _location = location;
     notifyListeners();
   }
 
@@ -152,7 +148,6 @@ class CreateListingViewModel extends ChangeNotifier {
   debugPrint('  isLoading: $_isLoading');
   debugPrint('  errorMessage: $_errorMessage');
   debugPrint('  listingType: $_listingType');
-  debugPrint('  location: $_location');
   debugPrint('  title: $_title');
   debugPrint('  description: $_description');
   debugPrint('  price: $_price');
@@ -182,6 +177,7 @@ class CreateListingViewModel extends ChangeNotifier {
         listingStatus: ListingStatus.draft,
         listingType: _listingType!,
         createdDate: Timestamp.now(),
+        location: location,
       );
 
       final result = await _listingRepository.createListing(listing);

@@ -71,8 +71,4 @@ class ListingsViewModel extends ChangeNotifier {
   Future<void> refreshListings() async {
     await _loadListings();
   }
-
-  void navigateToListing(String listingId) {
-    // Navigation will be handled in the wrapper widget
-  }
 }

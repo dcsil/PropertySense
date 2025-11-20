@@ -47,8 +47,8 @@ class User {
         familyName: map?['familyName'] as String,
         type: _userTypeFromString(map?['type'] as int),
         createdDate: (map?['createdDate'] as Timestamp).toDate(),
-        location: _locationFromGeoPoint(map?['location'] as GeoPoint),
-        placemark: await _placemarkFromGeoPoint(map?['location'] as GeoPoint),
+        location: locationFromGeoPoint(map?['location'] as GeoPoint),
+        placemark: await placemarkFromGeoPoint(map?['location'] as GeoPoint),
         contractorDetails: ContractorDetails.fromMap(map?['contractorDetails'] as Map<String, dynamic>?),
         homeownerDetails: HomeownerDetails.fromMap(map?['homeownerDetails'] as Map<String, dynamic>?),
         profilePhotoUrl: map?['profilePhotoUrl'] as String?,
@@ -81,14 +81,14 @@ class User {
     }
   }
 
-  static Future<Placemark> _placemarkFromGeoPoint(GeoPoint geoPoint) async {
+  static Future<Placemark> placemarkFromGeoPoint(GeoPoint geoPoint) async {
     // TODO:
     // Pray that this always returns at least one placemark
     List<Placemark> placemarks = await placemarkFromCoordinates(geoPoint.latitude, geoPoint.longitude);
     return placemarks.first;
   }
 
-  static Location _locationFromGeoPoint(GeoPoint geoPoint) {
+  static Location locationFromGeoPoint(GeoPoint geoPoint) {
     return Location(
       latitude: geoPoint.latitude,
       longitude: geoPoint.longitude,

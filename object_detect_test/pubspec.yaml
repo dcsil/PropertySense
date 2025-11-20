@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.0+3
 
 environment:
   sdk: ^3.9.2
@@ -42,13 +42,15 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  cloud_firestore: ^6.0.2
+  cloud_firestore: ^6.1.0
   flutter_native_splash: ^2.4.7
   go_router: ^16.3.0
   # TODO: add androidX support
   # https://pub.dev/packages/geocoding#usage
   geocoding: ^4.0.0
   intl: ^0.20.2
+  location: ^8.0.1
+  flutter_card_swiper: ^7.2.0
 
 dev_dependencies:
   flutter_test:
@@ -80,7 +82,7 @@ flutter:
 
   assets:
     - assets/models/1.tflite
-    - assets/models/trained_model.tflite
+    # - assets/models/trained_model.tflite
     - assets/models/labels.txt
     - assets/test_image.jpg
     - assets/flutter_logo.png
