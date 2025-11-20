@@ -107,4 +107,9 @@ class AuthRepositoryLocal implements AuthRepository {
       return Failure('Failed to send verification email: $e');
     }
   }
+  
+  @override
+  set firebaseAuthInstance(FirebaseAuth _firebaseAuthInstance) {
+    // TODO: implement firebaseAuthInstance
+  }
 }

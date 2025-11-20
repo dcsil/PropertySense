@@ -1,6 +1,8 @@
 import 'dart:core';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:object_detect_test/domain/models/user_model.dart';
 
 enum ListingStatus {
   draft,
@@ -29,6 +31,7 @@ class Listing {
   final List<String> imageUrls;
   final ListingStatus listingStatus;
   final ListingType listingType;
+  final Location location;
   final Timestamp createdDate;
 
   Listing({
@@ -41,6 +44,7 @@ class Listing {
     required this.listingStatus,
     required this.listingType,
     required this.createdDate,
+    required this.location,
   });
 
   // Convert from Firestore map to Listing
@@ -61,6 +65,13 @@ class Listing {
       listingStatus: _listingStatusFromInt(map?['listingStatus'] as int? ?? 0),
       listingType: _listingTypeFromInt(map?['listingType'] as int? ?? 0),
       createdDate: map?['createdDate'] as Timestamp? ?? Timestamp.now(),
+      // TODO: don't make location from geopoint under User
+      location: (() {
+        final geo = map?['location'] as GeoPoint?;
+        return geo != null
+        ? User.locationFromGeoPoint(geo)
+        : Location(latitude: 0.0, longitude: 0.0, timestamp: Timestamp.now().toDate());
+      })(),
     );
   }
 
@@ -75,6 +86,7 @@ class Listing {
       'listingStatus': listingStatus.index,
       'listingType': listingType.index,
       'createdDate': createdDate,
+      'location': GeoPoint(location.latitude, location.longitude),
     };
   }
 
@@ -91,4 +103,35 @@ class Listing {
     }
     return ListingType.values[typeInt];
   }
+}
+
+enum ListingSortByPreference {
+  priceLowToHigh,
+  priceHighToLow,
+  newestFirst,
+  oldestFirst,
+}
+
+class ListingQueryPreferences {
+  List<ListingType>? listingType;
+  double radiusInKm;
+  int minPrice;
+  int maxPrice;
+
+  ListingQueryPreferences({
+    this.listingType = const [
+      ListingType.roofing,
+      ListingType.exterior,
+      ListingType.structure,
+      ListingType.electrical,
+      ListingType.heating,
+      ListingType.cooling,
+      ListingType.insulation,
+      ListingType.plumbing,
+      ListingType.interior,
+    ],
+    this.radiusInKm = 5.0,
+    this.minPrice = 0,
+    this.maxPrice = 1000000,
+  });
 }

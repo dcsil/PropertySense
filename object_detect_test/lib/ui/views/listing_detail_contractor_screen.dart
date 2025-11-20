@@ -1,71 +1,80 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:object_detect_test/domain/models/listing_model.dart';
+import 'package:object_detect_test/domain/models/offer_model.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
-import 'package:object_detect_test/ui/viewmodels/listing_detail_viewmodel.dart';
+import 'package:object_detect_test/ui/viewmodels/listing_detail_contractor_viewmodel.dart';
 import 'package:provider/provider.dart';
 
-class ListingDetailScreen extends StatelessWidget {
+class ListingDetailContractorScreen extends StatelessWidget {
   final String listingId;
+  final bool showOfferDialog;
 
-  const ListingDetailScreen({super.key, required this.listingId});
+  const ListingDetailContractorScreen({
+    super.key,
+    required this.listingId,
+    this.showOfferDialog = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) =>
-          ListingDetailViewModel(context.read<ListingRepository>(), listingId),
-      child: const ListingDetailScreenContent(),
+      create: (context) => ListingDetailContractorViewModel(
+        context.read<ListingRepository>(),
+        context.read<UserRepository>(),
+        listingId,
+      ),
+      child: ListingDetailContractorScreenContent(
+        showOfferDialog: showOfferDialog,
+      ),
     );
   }
 }
 
-class ListingDetailScreenContent extends StatelessWidget {
-  const ListingDetailScreenContent({super.key});
+class ListingDetailContractorScreenContent extends StatefulWidget {
+  final bool showOfferDialog;
+
+  const ListingDetailContractorScreenContent({
+    super.key,
+    this.showOfferDialog = false,
+  });
+
+  @override
+  State<ListingDetailContractorScreenContent> createState() =>
+      _ListingDetailContractorScreenContentState();
+}
+
+class _ListingDetailContractorScreenContentState
+    extends State<ListingDetailContractorScreenContent> {
+  @override
+  void initState() {
+    super.initState();
+    
+    // Show dialog after first frame if flag is set
+    if (widget.showOfferDialog) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final viewModel = context.read<ListingDetailContractorViewModel>();
+        _showMakeOfferDialog(context, viewModel);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<ListingDetailViewModel>();
+    final viewModel = context.watch<ListingDetailContractorViewModel>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Listing Details'),
-        actions: [
-          if (viewModel.listing != null)
-            PopupMenuButton<String>(
-              onSelected: (value) =>
-                  _handleMenuAction(context, value, viewModel),
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit),
-                      SizedBox(width: 8),
-                      Text('Edit'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete),
-                      SizedBox(width: 8),
-                      Text('Delete'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-        ],
+        title: const Text('Job Details'),
       ),
       body: _buildBody(context, viewModel),
     );
   }
 
-  Widget _buildBody(BuildContext context, ListingDetailViewModel viewModel) {
+  Widget _buildBody(
+      BuildContext context, ListingDetailContractorViewModel viewModel) {
     if (viewModel.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -225,9 +234,9 @@ class ListingDetailScreenContent extends StatelessWidget {
         Text(
           '\$${listing.price.toStringAsFixed(0)}',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     );
@@ -291,7 +300,7 @@ class ListingDetailScreenContent extends StatelessWidget {
             const SizedBox(height: 12),
             _DetailRow(
               icon: Icons.person,
-              label: 'Author',
+              label: 'Homeowner',
               value: listing.author,
             ),
           ],
@@ -300,132 +309,138 @@ class ListingDetailScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context, ListingDetailViewModel viewModel) {
-    final listing = viewModel.listing!;
-
+  Widget _buildActions(
+      BuildContext context, ListingDetailContractorViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (listing.listingStatus == ListingStatus.draft)
-          FilledButton.icon(
-            onPressed: () =>
-                _updateStatus(context, viewModel, ListingStatus.pending),
-            icon: const Icon(Icons.publish),
-            label: const Text('Publish Listing'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
+        FilledButton.icon(
+          onPressed: () => _showMakeOfferDialog(context, viewModel),
+          icon: const Icon(Icons.send),
+          label: const Text('Make an Offer'),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
           ),
-        if (listing.listingStatus == ListingStatus.pending) ...[
-          FilledButton.icon(
-            onPressed: () =>
-                _updateStatus(context, viewModel, ListingStatus.done),
-            icon: const Icon(Icons.check_circle),
-            label: const Text('Mark as Done'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () =>
-                _updateStatus(context, viewModel, ListingStatus.draft),
-            icon: const Icon(Icons.unpublished),
-            label: const Text('Unpublish'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
-        ],
-        if (listing.listingStatus == ListingStatus.done)
-          OutlinedButton.icon(
-            onPressed: () =>
-                _updateStatus(context, viewModel, ListingStatus.pending),
-            icon: const Icon(Icons.refresh),
-            label: const Text('Relist'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
+        ),
       ],
     );
   }
 
-  Future<void> _handleMenuAction(
+  Future<void> _showMakeOfferDialog(
     BuildContext context,
-    String action,
-    ListingDetailViewModel viewModel,
+    ListingDetailContractorViewModel viewModel,
   ) async {
-    switch (action) {
-      case 'edit':
-        context.push('/listing/${viewModel.listingId}/edit');
-        break;
-      case 'delete':
-        _showDeleteConfirmation(context, viewModel);
-        break;
-    }
-  }
+    DateTime? selectedDate;
+    final priceController = TextEditingController();
+    final messageController = TextEditingController();
 
-  Future<void> _showDeleteConfirmation(
-    BuildContext context,
-    ListingDetailViewModel viewModel,
-  ) async {
-    final confirmed = await showDialog<bool>(
+    final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete listing?'),
-        content: const Text('This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Make an Offer'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Proposed Completion Date',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now().add(const Duration(days: 7)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (date != null) {
+                      setState(() {
+                        selectedDate = date;
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(
+                    selectedDate != null
+                        ? DateFormat('MMMM d, yyyy').format(selectedDate!)
+                        : 'Select Date',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: priceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Your Offer Price',
+                    prefixText: '\$',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: messageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Message (Optional)',
+                    border: OutlineInputBorder(),
+                    hintText: 'Add any additional details...',
+                  ),
+                  maxLines: 3,
+                ),
+              ],
             ),
-            child: const Text('Delete'),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (selectedDate != null && priceController.text.isNotEmpty) {
+                  Navigator.pop(context, true);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select a date and enter a price'),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Send Offer'),
+            ),
+          ],
+        ),
       ),
     );
 
-    if (confirmed == true && context.mounted) {
+    if (result == true && context.mounted) {
       try {
-        await viewModel.deleteListing();
+        await viewModel.createOffer(double.parse(priceController.text), selectedDate!, messageController.text);
+
         if (context.mounted) {
-          context.go('/listings');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Offer sent successfully!')),
+          );
+          context.pop();
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to send offer: $e')),
+          );
         }
       }
     }
-  }
 
-  Future<void> _updateStatus(
-    BuildContext context,
-    ListingDetailViewModel viewModel,
-    ListingStatus newStatus,
-  ) async {
-    try {
-      await viewModel.updateListingStatus(newStatus);
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Status updated')));
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
-      }
-    }
+    priceController.dispose();
+    messageController.dispose();
   }
 
   ({String label, IconData icon, Color color}) _getStatusInfo(
@@ -437,7 +452,7 @@ class ListingDetailScreenContent extends StatelessWidget {
       case ListingStatus.pending:
         return (label: 'Available', icon: Icons.schedule, color: Colors.blue);
       case ListingStatus.done:
-        return (label: 'Sold', icon: Icons.check_circle, color: Colors.green);
+        return (label: 'Completed', icon: Icons.check_circle, color: Colors.green);
     }
   }
 
@@ -493,8 +508,8 @@ class _DetailRow extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
               Text(
                 value,
