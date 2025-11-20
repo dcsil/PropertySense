@@ -45,7 +45,7 @@ class _RegistrationScreenContent extends StatelessWidget {
         case UserType.homeowner:
           context.go('/listings');
         case UserType.contractor:
-          context.go('/contractor');
+          context.go('/listings-swipe');
       }
     });
     return Scaffold(

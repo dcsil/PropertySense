@@ -71,7 +71,13 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
     }
 
     print('hi4');
-    locationData = await location.getLocation();
+    try {
+      locationData = await location.getLocation().timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      return Failure('Timed out while obtaining location (5s).');
+    } catch (e) {
+      return Failure('Failed to get location: $e');
+    }
     print('hi5');
     currentContractorLocation = Location(
       latitude: locationData.latitude!,
