@@ -13,9 +13,9 @@ import 'package:object_detect_test/ui/views/verify_email_screen.dart';
 final GoRouter router = GoRouter(
   routes: [
     GoRoute(
-      path: '/',
+      path: '/camera',
       builder: (context, state) {
-        return const LoginScreen();
+        return const CameraScreen();
       },
     ),
     GoRoute(

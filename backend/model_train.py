@@ -3,6 +3,15 @@ import torch
 import shutil
 from pathlib import Path
 
+# ============================================================
+# HYPERPARAMETERS - Modify these to tune training
+# ============================================================
+EPOCHS = 10             # Number of training epochs
+IMG_SIZE = 640          # Input image size
+BATCH_SIZE = 16         # Batch size
+LEARNING_RATE = 0.001   # Initial learning rate
+# ============================================================
+
 class HomeRepairYOLOTrainer:
     """Fine-tune YOLO for home repair detection"""
     
@@ -11,24 +20,30 @@ class HomeRepairYOLOTrainer:
         
     def train(self,
               data_yaml: str,
-              epochs: int = 50,
-              img_size: int = 640,
-              batch_size: int = 32):
-        """
-        Fine-tune YOLO on home repair dataset
-        
-        Args:
-            data_yaml: Path to data.yaml defining dataset structure
-            epochs: Number of training epochs
-            img_size: Input image size
-            batch_size: Batch size
-        """
+              epochs: int = EPOCHS,
+              img_size: int = IMG_SIZE,
+              batch_size: int = BATCH_SIZE):
+        """Fine-tune YOLO on home repair dataset"""
         print("=" * 60)
         print("🚀 Training Model")
         print("=" * 60)
         print(f"Epochs: {epochs}, Image size: {img_size}, Batch: {batch_size}")
+        print(f"Learning rate: {LEARNING_RATE}")
         print(f"Device: {'CUDA' if torch.cuda.is_available() else 'CPU'}")
         print("=" * 60)
+        
+        # Add callback to print clear accuracy metrics
+        def on_fit_epoch_end(trainer):
+            metrics = trainer.metrics
+            epoch = trainer.epoch + 1
+            map50 = metrics.get('metrics/mAP50(B)', 0)
+            map50_95 = metrics.get('metrics/mAP50-95(B)', 0)
+            box_loss = metrics.get('train/box_loss', 0)
+            cls_loss = metrics.get('train/cls_loss', 0)
+            
+            print(f"\n📊 Epoch {epoch}/{epochs}: Accuracy={map50*100:.1f}% | mAP50-95={map50_95*100:.1f}% | BoxLoss={box_loss:.4f} | ClsLoss={cls_loss:.4f}\n")
+        
+        self.model.add_callback('on_fit_epoch_end', on_fit_epoch_end)
         
         results = self.model.train(
             data=data_yaml,
@@ -38,17 +53,20 @@ class HomeRepairYOLOTrainer:
             name="home_repair_detector",
             project="runs/train",
             optimizer="Adam",
-            lr0=0.001,
+            lr0=LEARNING_RATE,
             hsv_h=0.015,
             hsv_s=0.7,
             hsv_v=0.4,
             degrees=10.0,
             translate=0.1,
             scale=0.5,
-            device=0 if torch.cuda.is_available() else "cpu"
+            device=0 if torch.cuda.is_available() else "cpu",
+            verbose=True
         )
         
         print("\n✅ Training complete!")
+        final_acc = results.results_dict.get('metrics/mAP50(B)', 0)
+        print(f"🎯 Final Accuracy: {final_acc*100:.1f}%")
         return results
     
     def deploy_to_flutter(self):
@@ -93,12 +111,12 @@ def train_and_deploy():
         print("⚠️  Creating placeholder data.yaml")
         create_data_yaml()
     
-    # Train
+    # Train (uses HYPERPARAMETERS from top of file)
     trainer.train(
         data_yaml=str(data_yaml),
-        epochs=50,
-        img_size=640,
-        batch_size=16
+        epochs=EPOCHS,
+        img_size=IMG_SIZE,
+        batch_size=BATCH_SIZE
     )
     
     # Deploy to Flutter
