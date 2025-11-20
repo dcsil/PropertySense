@@ -50,6 +50,7 @@ void main() {
 
         when(mockUser.email).thenReturn('test@example.com');
         when(mockUser.uid).thenReturn(testUserId);
+        when(mockUser.emailVerified).thenReturn(true);
         when(mockUser.metadata).thenReturn(mockUserMetadata);
         when(mockUserMetadata.creationTime).thenReturn(testCreationTime);
         when(mockFirebaseAuth.userChanges())
@@ -79,6 +80,7 @@ void main() {
 
     when(mockUser.uid).thenReturn(testUserId);
     when(mockUser.email).thenReturn('test@example.com');
+    when(mockUser.emailVerified).thenReturn(false);
     when(mockUser.metadata).thenReturn(mockUserMetadata);
     when(mockUserMetadata.creationTime).thenReturn(null);
     when(mockFirebaseAuth.userChanges())
@@ -115,10 +117,12 @@ void main() {
         when(mockUser1.uid).thenReturn(testUserId1);
         when(mockUser1.metadata).thenReturn(mockMetadata1);
         when(mockMetadata1.creationTime).thenReturn(testCreationTime1);
+        when(mockUser1.emailVerified).thenReturn(true);
 
         when(mockUser2.uid).thenReturn(testUserId2);
         when(mockUser2.metadata).thenReturn(mockMetadata2);
         when(mockMetadata2.creationTime).thenReturn(testCreationTime2);
+        when(mockUser2.emailVerified).thenReturn(true);
 
         when(mockUser1.email).thenReturn('user1@example.com');
         when(mockUser2.email).thenReturn('user2@example.com');
@@ -197,6 +201,7 @@ void main() {
 
         when(mockUser.email).thenReturn('test@example.com');
         when(mockUser.uid).thenReturn(testUserId);
+        when(mockUser.emailVerified).thenReturn(true);
         when(mockUser.metadata).thenReturn(mockUserMetadata);
         when(mockUserMetadata.creationTime).thenReturn(testCreationTime);
         when(mockFirebaseAuth.userChanges())
@@ -216,6 +221,7 @@ void main() {
         // Arrange
     when(mockUser.uid).thenReturn('test-id');
     when(mockUser.email).thenReturn('test@example.com');
+    when(mockUser.emailVerified).thenReturn(false);
     when(mockUser.metadata).thenReturn(mockUserMetadata);
     when(mockUserMetadata.creationTime).thenReturn(null);
     when(mockFirebaseAuth.userChanges())

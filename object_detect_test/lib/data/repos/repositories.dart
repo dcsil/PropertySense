@@ -6,7 +6,7 @@ import '../../domain/models/user_model.dart';
 import '../../utils/result.dart';
 
 abstract class AuthRepository {
-    late fb_auth.FirebaseAuth firebaseAuthInstance;
+  fb_auth.FirebaseAuth get firebaseAuthInstance;
     Stream<Result<Auth?>> authStateChanges();
     Future<Result<void>> signInWithEmail(String email, String password);
     Future<Result<void>> signInWithGoogle();
