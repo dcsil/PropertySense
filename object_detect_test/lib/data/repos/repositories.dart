@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:geocoding/geocoding.dart';
 import 'package:location/location.dart' as loc;
 import 'package:object_detect_test/domain/models/listing_model.dart';
+import 'package:object_detect_test/domain/models/offer_model.dart';
 
 import '../../domain/models/auth_model.dart';
 import '../../domain/models/user_model.dart';
@@ -36,6 +37,7 @@ abstract class ListingRepository {
   Future<Result<Listing>> getListing(String listingId);
   Future<Result<void>> deleteListing(String listingId);
   Future<Result<void>> updateListingStatus(String listingId, ListingStatus newStatus);
+  Future<Result<void>> createListingOffer(String listingId, String contractorId, Offer offer);
 }
 
 abstract class ContractorListingRepository {

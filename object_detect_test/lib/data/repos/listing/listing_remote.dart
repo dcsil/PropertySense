@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/domain/models/listing_model.dart';
+import 'package:object_detect_test/domain/models/offer_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 
 class ListingRepositoryRemote implements ListingRepository {
@@ -69,7 +70,7 @@ class ListingRepositoryRemote implements ListingRepository {
   @override
   Future<Result<void>> updateListingStatus(String listingId, ListingStatus newStatus) async {
     try {
-      _firestore
+      await _firestore
         .collection('listings')
         .doc(listingId)
         .update({'listingStatus': newStatus.index});
@@ -77,6 +78,20 @@ class ListingRepositoryRemote implements ListingRepository {
       return Success(null);
     } catch (e) {
       return Future.value(Failure('Failed to update listing status: $e'));
+    }
+  }
+  @override
+  Future<Result<void>> createListingOffer(String listingId, String contractorId, Offer offer) async {
+    try {
+      await _firestore
+      .collection('listings')
+      .doc(listingId)
+      .collection('offers')
+      .add(offer.toFirestore());
+      return Success(null);
+    }
+    catch (e) {
+      return Failure('Failed to make offer on listing: $e');
     }
   }
 } 

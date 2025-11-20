@@ -120,6 +120,7 @@ class ListingQueryPreferences {
 
   ListingQueryPreferences({
     this.listingType = const [
+      ListingType.roofing,
       ListingType.exterior,
       ListingType.structure,
       ListingType.electrical,
