@@ -1,16 +1,15 @@
-# Home Repair Dataset
-        path: /Users/Carol/Documents/mystuff/University/Classes/y5/csc454_491/PropertySense/backend/data
-        train: train/images
-        val: val/images
+# Home Repair Dataset Configuration for YOLO
+path: /Users/Carol/Documents/mystuff/University/Classes/y5/csc454_491/PropertySense/backend/data
+train: train/images
+val: val/images
 
-        names:
-        0: algae
-        1: major_crack
-        2: minor_crack
-        3: peeling
-        4: spalling
-        5: stain
-        6: plain
+names:
+  0: algae
+  1: major_crack
+  2: minor_crack
+  3: peeling
+  4: spalling
+  5: stain
+  6: plain
 
-        nc: 7
-    
+nc: 7

@@ -23,6 +23,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:object_detect_test/ml/model_loader.dart';
 import 'package:object_detect_test/ml/home_repair_detector.dart';
+import 'package:object_detect_test/domain/services/price_predictor.dart';
+import 'package:object_detect_test/ui/views/defect_report_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -315,6 +317,32 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
 
+  /// Generate cost report from current detections
+  void _generateReport() {
+    if (_detections == null || _detections!.isEmpty) return;
+
+    final pricePredictor = PricePredictor();
+    
+    // Convert detections to format expected by price predictor
+    final detectionsForPredictor = _detections!.map((d) => {
+      'class': d['label'] as String,
+      'confidence': d['confidence'] as double,
+    }).toList();
+    
+    // Get cost predictions
+    final predictedDetections = pricePredictor.predictBatch(detectionsForPredictor);
+    
+    // Navigate to report screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DefectReportScreen(
+          detections: predictedDetections,
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _controller?.dispose();
@@ -364,6 +392,14 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
           ],
         ),
+        floatingActionButton: _detections != null && _detections!.isNotEmpty
+            ? FloatingActionButton.extended(
+                onPressed: _generateReport,
+                icon: const Icon(Icons.assessment),
+                label: const Text('Generate Report'),
+                backgroundColor: Colors.blue,
+              )
+            : null,
       );
     }
 
@@ -421,13 +457,30 @@ class _CameraScreenState extends State<CameraScreen> {
                 const SizedBox(height: 16),
                 _buildDetectionsList(),
                 const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: () => setState(() {
-                    _testImageBytes = null;
-                    _detections = null;
-                  }),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Try Another Image'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _detections != null && _detections!.isNotEmpty
+                          ? _generateReport
+                          : null,
+                      icon: const Icon(Icons.assessment),
+                      label: const Text('Generate Report'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => setState(() {
+                        _testImageBytes = null;
+                        _detections = null;
+                      }),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Try Another'),
+                    ),
+                  ],
                 ),
               ],
             ],

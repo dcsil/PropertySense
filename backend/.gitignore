@@ -1,2 +1,5 @@
 data/
 venv/
+labelless_data/
+.DS_Store
+runs/
