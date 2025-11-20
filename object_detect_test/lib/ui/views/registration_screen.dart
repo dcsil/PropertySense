@@ -37,13 +37,14 @@ class _RegistrationScreenContent extends StatelessWidget {
     final viewModel = context.watch<RegistrationViewModel>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print('hi');
       if (viewModel.currentUser == null) {
+        print('Registration callback: currentUser is still null');
         return;
       }
+      print('Registration callback: navigating to ${viewModel.currentUser!.type} home');
       switch (viewModel.currentUser!.type) {
         case UserType.homeowner:
-          context.go('/listings');
+          context.go('/homeowner');
         case UserType.contractor:
           context.go('/contractor');
       }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:object_detect_test/ui/views/camera_screen.dart';
 import 'package:object_detect_test/ui/views/contractor_home_screen.dart';
 import 'package:object_detect_test/ui/views/create_listing_screen.dart';
 import 'package:object_detect_test/ui/views/email_signup_screen.dart';
+import 'package:object_detect_test/ui/views/homeowner_home_screen.dart';
 import 'package:object_detect_test/ui/views/listing_detail_contractor_screen.dart';
 import 'package:object_detect_test/ui/views/listing_detail_screen.dart';
 import 'package:object_detect_test/ui/views/listing_swipe_screen.dart';
@@ -13,6 +15,18 @@ import 'package:object_detect_test/ui/views/verify_email_screen.dart';
 
 final GoRouter router = GoRouter(
   routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) {
+        return const LoginScreen();
+      },
+    ),
+    GoRoute(
+      path: '/homeowner',
+      builder: (context, state) {
+        return const HomeOwnerHomeScreen();
+      },
+    ),
     GoRoute(
       path: '/camera',
       builder: (context, state) {
