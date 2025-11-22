@@ -48,6 +48,8 @@ abstract class ContractorListingRepository {
   late Set<String> seenListings;
   late Location currentContractorLocation; 
   late Stream<List<Listing>> bufferStream;
+  late bool isInitialized;
+  late loc.Location locationService;
   Future<Result<void>> initializeLocation();
   Future<void> stopLocationUpdates();
   late ListingQueryPreferences listingQueryPreferences;

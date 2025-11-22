@@ -22,6 +22,7 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
   @override
   late Set<String> seenListings;
 
+
   // Stream controller for buffer updates
   final StreamController<List<Listing>> _bufferController = StreamController<List<Listing>>.broadcast();
   
@@ -33,14 +34,19 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
   @override
   late Location currentContractorLocation;
 
+
   // TODO get this from user data:
   @override
   late ListingQueryPreferences listingQueryPreferences = ListingQueryPreferences(radiusInKm: 1);
 
+  @override
+  late bool isInitialized = false;
+
 
   // Internal location service and subscription to keep contractor location up to date
-  late loc.Location _locationService;
+  late loc.Location locationService;
 
+  @override
   late StreamSubscription<loc.LocationData>? locationSubscription;
 
   /// Initialize location once and start listening for continuous updates.
@@ -70,27 +76,11 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
       }
     }
 
-    print('hi4');
-    try {
-      locationData = await location.getLocation().timeout(const Duration(seconds: 5));
-    } on TimeoutException {
-      return Failure('Timed out while obtaining location (5s).');
-    } catch (e) {
-      return Failure('Failed to get location: $e');
-    }
-    print('hi5');
-    currentContractorLocation = Location(
-      latitude: locationData.latitude!,
-      longitude: locationData.longitude!,
-      timestamp: DateTime.now(),
-    );
-    print(currentContractorLocation);
-
     // Keep a reference to the location service so we can listen/cancel later
-    _locationService = location;
+    locationService = location;
 
     // Start listening for continuous location updates and update the currentContractorLocation
-    locationSubscription = _locationService.onLocationChanged.listen(
+    locationSubscription = locationService.onLocationChanged.listen(
       (loc.LocationData currentLocation) {
         if (currentLocation.latitude != null && currentLocation.longitude != null) {
           currentContractorLocation = Location(
@@ -99,7 +89,6 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
             timestamp: DateTime.now(),
           );
           print("updated location: $currentContractorLocation");
-          
           // Check if we should fetch new listings
           _checkAndFetchListings();
         }
@@ -110,6 +99,27 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
         // Consider logging if you have a logging mechanism
       },
     );
+
+    print('hi4');
+    // try {
+    //   locationData = await location.getLocation().timeout(const Duration(seconds: 5));
+    // } on TimeoutException {
+    //   return Failure('Timed out while obtaining location (5s). $e');
+    // } catch (e) {
+    //   return Failure('Failed to get location: $e');
+    // }
+
+    locationData = await location.getLocation().timeout(const Duration(seconds: 5));
+
+    // print('hi5');
+    currentContractorLocation = Location(
+      latitude: locationData.latitude!,
+      longitude: locationData.longitude!,
+      timestamp: DateTime.now(),
+    );
+    print(currentContractorLocation);
+
+    isInitialized = true;
 
     return Success(null);
   }
@@ -174,7 +184,8 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
         return result;
       }
 
-      final List<Listing> fetchedListings = (result as Success<List<Listing>>).value;
+      // final List<Listing> fetchedListings = (result as Success<List<Listing>>).value;
+      final List<Listing> fetchedListings = [];
 
       // Add only unseen listings to buffer
       for (final listing in fetchedListings) {
@@ -213,9 +224,24 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
   Future<Result<List<Listing>>> _fetchListingsFromFirestore(Location location) async {
     try {
       // Get radius from preferences and convert to degrees
-      double radiusInKm = listingQueryPreferences.radiusInKm;
-      double latDelta = radiusInKm / 111; // 1 degree latitude ≈ 111km
-      double lonDelta = radiusInKm / (111 * cos(_degreesToRadians(location.latitude))); // 1 degree longitude varies by latitude
+      // double radiusInKm = listingQueryPreferences.radiusInKm;
+      // Hardcoding to 100m
+      // Use configured radius (km) from preferences
+      // double radiusInKm = listingQueryPreferences.radiusInKm;
+      double radiusInKm = 1;
+      double radiusMeters = radiusInKm * 1000;
+
+      // More accurate conversion using earth radius (meters)
+      const double earthRadius = 6378137.0;
+      double latRad = _degreesToRadians(location.latitude);
+
+      // Angular distance in degrees
+      double latDelta = (radiusMeters / earthRadius) * (180 / pi);
+
+      // Protect against cos(lat) == 0 near poles
+      double cosLat = cos(latRad);
+      if (cosLat.abs() < 1e-10) cosLat = 1e-10;
+      double lonDelta = (radiusMeters / (earthRadius * cosLat)) * (180 / pi);
 
       double minLat = location.latitude - latDelta;
       double maxLat = location.latitude + latDelta;
