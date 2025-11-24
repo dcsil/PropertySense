@@ -27,8 +27,8 @@ void main() async {
               ListingRepositoryRemote(firestore: FirebaseFirestore.instance),
         ),
         Provider<ContractorListingRepository>(
-          create: (_) =>
-              ContractorListingRepositoryRemote(firestore: FirebaseFirestore.instance),
+          create: (context) =>
+              ContractorListingRepositoryRemote(context.read<LocationRepository>()),
         ),
         Provider<AuthRepository>(
           create: (_) =>
