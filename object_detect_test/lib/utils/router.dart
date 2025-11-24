@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:object_detect_test/ui/views/contractor_home_screen.dart';
 import 'package:object_detect_test/ui/views/create_listing_screen.dart';
 import 'package:object_detect_test/ui/views/email_signup_screen.dart';
 import 'package:object_detect_test/ui/views/listing_detail_contractor_screen.dart';
 import 'package:object_detect_test/ui/views/listing_detail_screen.dart';
+import 'package:object_detect_test/ui/views/listing_map_screen.dart';
 import 'package:object_detect_test/ui/views/listing_swipe_screen.dart';
 import 'package:object_detect_test/ui/views/listings_screen.dart';
 import 'package:object_detect_test/ui/views/login_screen.dart';
@@ -108,6 +107,21 @@ final GoRouter router = GoRouter(
       path: '/verify-email',
       builder: (context, state) {
         return const VerifyEmailScreen();
+      },
+    ),
+    GoRoute(
+      path: '/listings-map',
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: ScaffoldWithNavBar(
+            currentIndex: 1,
+            child: const ListingMapScreen(),
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return child;
+          },
+        );
       },
     ),
   ],

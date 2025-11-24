@@ -44,11 +44,21 @@ abstract class ListingRepository {
 }
 
 abstract class LocationRepository {
+  Location cachedLocation = Location(latitude: 0.0, longitude: 0.0, timestamp: DateTime.now());
+  // FOR DEBUGGING PURPOSES ONLY
+  Location? minLoc;
+  Location? maxLoc;
+
   Future<Result<Stream<Location>>> locationStream();
 }
 
 abstract class ContractorListingRepository {
   // Returns stream of listings buffers
-  Result<Stream<Map<String, Listing>>> nearbyListingsBufferStream();
-  void markListingAsSeen(String listingId);
+  Map<String, Listing> cachedListings = {};
+  // fuck man I tried to keep this in the viewmodels but the widgets were being bad boys
+  // and did not stay persistent (dispose call everytime we just switch pages ffs)
+  // so here we are putting the seenListings back in the fucking data sources
+  Set<String> dismissedListingIds = {};
+  Future<Result<Stream<Map<String, Listing>>>> nearbyListingsBufferStream();
+  void markListingAsDismissed(String listingId);
 }

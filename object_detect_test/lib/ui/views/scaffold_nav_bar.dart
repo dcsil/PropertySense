@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
+import 'package:object_detect_test/domain/models/user_model.dart';
 import 'package:provider/provider.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
@@ -23,13 +24,16 @@ class ScaffoldWithNavBar extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: (index) {
-          if (userType == 1) {
+          if (userType == UserType.contractor) {
             // Contractor navigation
             switch (index) {
               case 0:
-                context.go('/listings');
+                context.go('/listings-swipe');
                 break;
               case 1:
+                context.go('/listings-map');
+                break;
+              case 2:
                 context.go('/profile');
                 break;
             }
@@ -38,20 +42,23 @@ class ScaffoldWithNavBar extends StatelessWidget {
             switch (index) {
               case 0:
                 context.go('/listings');
-                break;
               case 1:
                 context.go('/profile');
-                break;
             }
           }
         },
-        destinations: userType == 1
+        destinations: userType == UserType.contractor
             ? const [
                 // Contractor tabs
                 NavigationDestination(
                   icon: Icon(Icons.work_outline),
                   selectedIcon: Icon(Icons.work),
                   label: 'Find Jobs',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.map_outlined),
+                  selectedIcon: Icon(Icons.map),
+                  label: 'Map',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.person_outline),

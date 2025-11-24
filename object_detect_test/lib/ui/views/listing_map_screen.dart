@@ -60,8 +60,8 @@ class ListingMapScreenContent extends StatelessWidget {
 
   void _showNextPopup(ListingMapViewModel vm) {
     if (vm.listingPopupQ.isNotEmpty) {
+      vm.addToAlreadyPoppedUp(vm.listingPopupQ.first.id);
       vm.listingPopupQ.removeAt(0);
-      vm.notifyListeners();
     }
   }
 
@@ -71,41 +71,6 @@ class ListingMapScreenContent extends StatelessWidget {
   }
 
   Widget _buildMapBody(BuildContext context, ListingMapViewModel viewModel) {
-    if (viewModel.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    if (viewModel.errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              viewModel.errorMessage!,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () {
-                // TODO: Implement refresh if needed
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
     return FlutterMap(
       options: MapOptions(
         initialCenter: LatLng(
@@ -128,6 +93,46 @@ class ListingMapScreenContent extends StatelessWidget {
               point: LatLng(
                 viewModel.currLocation.latitude,
                 viewModel.currLocation.longitude,
+              ),
+              width: 40,
+              height: 40,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+            Marker(
+              point: LatLng(
+                viewModel.maxLoc == null ? 0.0 : viewModel.maxLoc!.latitude,
+                viewModel.maxLoc == null ? 0.0 : viewModel.maxLoc!.longitude,
+              ),
+              width: 40,
+              height: 40,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+            Marker(
+              point: LatLng(
+                viewModel.minLoc == null ? 0.0 : viewModel.minLoc!.latitude,
+                viewModel.minLoc == null ? 0.0 : viewModel.minLoc!.longitude,
               ),
               width: 40,
               height: 40,
