@@ -29,13 +29,10 @@ class ScaffoldWithNavBar extends StatelessWidget {
             switch (index) {
               case 0:
                 context.go('/listings-swipe');
-                break;
               case 1:
                 context.go('/listings-map');
-                break;
               case 2:
-                context.go('/profile');
-                break;
+                context.go('/inbox-contractor');
             }
           } else {
             // Homeowner navigation
@@ -45,7 +42,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
               case 1:
                 context.go('/inbox-homeowner');
               case 2:
-                context.go('/profile-homeowner');
+                context.push('/profile-homeowner');
             }
           }
         },
@@ -63,9 +60,9 @@ class ScaffoldWithNavBar extends StatelessWidget {
                   label: 'Map',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person),
-                  label: 'Profile',
+                  icon: Icon(Icons.inbox_outlined),
+                  selectedIcon: Icon(Icons.inbox),
+                  label: 'Inbox',
                 ),
               ]
             : const [
@@ -74,6 +71,11 @@ class ScaffoldWithNavBar extends StatelessWidget {
                   icon: Icon(Icons.list_outlined),
                   selectedIcon: Icon(Icons.list),
                   label: 'My Listings',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.inbox_outlined),
+                  selectedIcon: Icon(Icons.inbox),
+                  label: 'Inbox',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.person_outline),
