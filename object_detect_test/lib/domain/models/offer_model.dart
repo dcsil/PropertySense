@@ -30,10 +30,10 @@ class Offer {
   });
 
 static Offer fromFirestore(
-    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    DocumentSnapshot<Object?> snapshot,
     SnapshotOptions? options,
   ) {
-    final map = snapshot.data();
+    final map = snapshot.data() as Map<String, dynamic>?;
     return Offer(
       id: snapshot.id,
       listingId: map?['listingId'] as String? ?? '',

@@ -42,7 +42,7 @@ abstract class ListingRepository {
   Future<Result<void>> deleteListing(String listingId);
   Future<Result<void>> updateListingStatus(String listingId, ListingStatus newStatus);
   Future<Result<void>> createListingOffer(String listingId, String contractorId, Offer offer);
-  Future<Result<void>> getListingOffersForUser(String uid);
+  Future<Result<List<Offer>>> getOffersForContractor(String uid);
 }
 
 abstract class LocationRepository {

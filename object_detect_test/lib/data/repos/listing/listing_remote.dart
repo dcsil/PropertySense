@@ -7,20 +7,20 @@ import 'package:object_detect_test/utils/result.dart';
 class ListingRepositoryRemote implements ListingRepository {
   final FirebaseFirestore _firestore;
   ListingRepositoryRemote({required FirebaseFirestore firestore})
-      : _firestore = firestore;
+    : _firestore = firestore;
 
   @override
   Future<Result<List<Listing>>> getListings(String uid) async {
     print(uid);
     try {
       final querySnapshot = await _firestore
-        .collection('listings')
-        .where('author', isEqualTo: uid)
-        .get();
+          .collection('listings')
+          .where('author', isEqualTo: uid)
+          .get();
 
       final listings = querySnapshot.docs
-        .map((doc) => Listing.fromFirestore(doc, null))
-        .toList();
+          .map((doc) => Listing.fromFirestore(doc, null))
+          .toList();
 
       return Success(listings);
     } catch (e) {
@@ -55,7 +55,7 @@ class ListingRepositoryRemote implements ListingRepository {
       return Failure('Failed to create user document: $e');
     }
   }
-  
+
   @override
   Future<Result<void>> deleteListing(String listingId) async {
     try {
@@ -65,60 +65,59 @@ class ListingRepositoryRemote implements ListingRepository {
       return Failure('Failed to delete listing: $e');
     }
   }
-  
-  
+
   @override
-  Future<Result<void>> updateListingStatus(String listingId, ListingStatus newStatus) async {
+  Future<Result<void>> updateListingStatus(
+    String listingId,
+    ListingStatus newStatus,
+  ) async {
     try {
-      await _firestore
-        .collection('listings')
-        .doc(listingId)
-        .update({'listingStatus': newStatus.index});
+      await _firestore.collection('listings').doc(listingId).update({
+        'listingStatus': newStatus.index,
+      });
 
       return Success(null);
     } catch (e) {
       return Future.value(Failure('Failed to update listing status: $e'));
     }
   }
+
   @override
-  Future<Result<void>> createListingOffer(String listingId, String contractorId, Offer offer) async {
+  Future<Result<void>> createListingOffer(
+    String listingId,
+    String contractorId,
+    Offer offer,
+  ) async {
     try {
       await _firestore
-      .collection('listings')
-      .doc(listingId)
-      .collection('offers')
-      .add(offer.toFirestore());
+          .collection('listings')
+          .doc(listingId)
+          .collection('offers')
+          .add(offer.toFirestore());
       return Success(null);
-    }
-    catch (e) {
+    } catch (e) {
       return Failure('Failed to make offer on listing: $e');
     }
   }
 
-  @override
-  Future<Result<void>> getListingOffersForUser(String uid) async {
-    // TODO: can we do more efficient query here?
+  Future<Result<List<Offer>>> getOffersForContractor(
+    String contractorId,
+  ) async {
     try {
-      final listings = await getListings(uid);
-      if (listings is Failure) {
-        return Failure('Failed to fetch listings for user: ${(listings as Failure).message}');
-      }
-      final l = listings as Success<List<Listing>>;
-      final offers = <Offer>[];
-      for (final listing in l.value) {
-        final offersSnapshot = await _firestore
-          .collection('listings')
-          .doc(listing.id)
-          .collection('offers')
-          .where('contractorId', isEqualTo: uid)
+      // Query across ALL offers subcollections
+      QuerySnapshot querySnapshot = await _firestore
+          .collectionGroup('offers') // searches all 'offers' subcollections
+          .where('contractorId', isEqualTo: contractorId)
           .get();
 
-          offers.addAll(offersSnapshot.docs.map((doc) => Offer.fromFirestore(doc, null)).toList());
-      }
-      return Success(null);
-    }
-    catch (e) {
-      return Failure('Failed to make offer on listing: $e');
+      List<Offer> offers = querySnapshot.docs
+          .map((doc) => Offer.fromFirestore(doc, null))
+          .toList();
+
+      return Success(offers);
+    } catch (e) {
+      print(e);
+      return Failure('Failed to fetch offers: $e');
     }
   }
-} 
+}
