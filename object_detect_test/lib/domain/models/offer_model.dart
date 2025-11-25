@@ -3,6 +3,7 @@ enum OfferStatus {
   pending,
   accepted,
   finished,
+  rejected,
 }
 
 class Offer {

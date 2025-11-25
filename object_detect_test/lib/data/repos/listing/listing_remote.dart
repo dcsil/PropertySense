@@ -94,4 +94,31 @@ class ListingRepositoryRemote implements ListingRepository {
       return Failure('Failed to make offer on listing: $e');
     }
   }
+
+  @override
+  Future<Result<void>> getListingOffersForUser(String uid) async {
+    // TODO: can we do more efficient query here?
+    try {
+      final listings = await getListings(uid);
+      if (listings is Failure) {
+        return Failure('Failed to fetch listings for user: ${(listings as Failure).message}');
+      }
+      final l = listings as Success<List<Listing>>;
+      final offers = <Offer>[];
+      for (final listing in l.value) {
+        final offersSnapshot = await _firestore
+          .collection('listings')
+          .doc(listing.id)
+          .collection('offers')
+          .where('contractorId', isEqualTo: uid)
+          .get();
+
+          offers.addAll(offersSnapshot.docs.map((doc) => Offer.fromFirestore(doc, null)).toList());
+      }
+      return Success(null);
+    }
+    catch (e) {
+      return Failure('Failed to make offer on listing: $e');
+    }
+  }
 } 
