@@ -7,6 +7,7 @@ import 'package:object_detect_test/ui/views/listing_map_screen.dart';
 import 'package:object_detect_test/ui/views/listing_swipe_screen.dart';
 import 'package:object_detect_test/ui/views/listings_screen.dart';
 import 'package:object_detect_test/ui/views/login_screen.dart';
+import 'package:object_detect_test/ui/views/profile_homeowner_screen.dart';
 import 'package:object_detect_test/ui/views/registration_screen.dart';
 import 'package:object_detect_test/ui/views/scaffold_nav_bar.dart';
 import 'package:object_detect_test/ui/views/verify_email_screen.dart';
@@ -124,5 +125,17 @@ final GoRouter router = GoRouter(
         );
       },
     ),
+    GoRoute(
+      path: '/profile-homeowner',
+      builder: (context, state) {
+        return const ProfileHomeownerScreen();
+      },
+    ),
+    // GoRoute(
+    //   path: '/profile-contractor',
+    //   builder: (context, state) {
+    //     return const ProfileContractorScreen();
+    //   },
+    // ),
   ],
 );

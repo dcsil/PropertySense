@@ -43,7 +43,9 @@ class ScaffoldWithNavBar extends StatelessWidget {
               case 0:
                 context.go('/listings');
               case 1:
-                context.go('/profile');
+                context.go('/inbox-homeowner');
+              case 2:
+                context.go('/profile-homeowner');
             }
           }
         },
