@@ -30,6 +30,12 @@ class LoginViewModel extends ChangeNotifier {
       isLoading = false;
       switch (result) {
         case Success<Auth?>():
+          // If auth is null, user is logged out
+          if (result.value == null) {
+            currentAuth = null;
+            notifyListeners();
+            return;
+          }
           currentAuth = result.value;
           notifyListeners();
         case Failure():

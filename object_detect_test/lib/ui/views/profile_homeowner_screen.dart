@@ -263,7 +263,10 @@ class _ProfileHomeownerContentState extends State<ProfileHomeownerContent> {
     );
 
     if (confirmed == true && context.mounted) {
-      viewModel.signOut();
+      // removing this await breaks signout...
+      // I have no idea but whatever don't have time
+      // TODO fix
+      await viewModel.signOut();
       context.go('/');
     }
   }

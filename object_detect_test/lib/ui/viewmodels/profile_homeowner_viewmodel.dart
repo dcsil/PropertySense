@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/domain/models/homeowner_details_model.dart';
+import 'package:object_detect_test/domain/models/user_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 import 'package:object_detect_test/utils/toaster.dart';
 
@@ -26,12 +27,19 @@ class ProfileHomeownerViewModel extends ChangeNotifier {
     notifyListeners();
     
     try {
-      // TODO: Call repository method to update user profile
-      // await _userRepo.updateProfile(givenName, familyName, homeownerDetails);
-      
-      // For now, just simulate a delay
-      await Future.delayed(const Duration(milliseconds: 500));
-      
+      User currUser = _userRepo.currentUser!;
+      User updatedUser = User(
+        id: currUser.id,
+        type: currUser.type,
+        givenName: givenName,
+        familyName: familyName,
+        homeownerDetails: homeownerDetails, 
+        createdDate: currUser.createdDate, 
+        // These don't even get used
+        location: currUser.location, 
+        placemark: currUser.placemark,
+      );
+      await _userRepo.updateUserDocument(updatedUser);
     } catch (e) {
       Toaster.showError('Failed to update profile: $e');
     } finally {

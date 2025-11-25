@@ -30,6 +30,7 @@ abstract class UserRepository {
     Stream<Result<User?>> userStateChanges();
     Future<Result<User?>> fetchUser(String uid);
     Future<Result<void>> createUserDocument(User user);
+    Future<Result<void>> updateUserDocument(User user);
 }
 
 abstract class ListingRepository {
