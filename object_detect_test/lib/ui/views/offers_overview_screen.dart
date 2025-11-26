@@ -151,7 +151,8 @@ class OffersOverviewScreenContent extends StatelessWidget {
           final offer = viewModel.filteredOffers[index];
           return _OfferCard(
             offer: offer,
-            onTap: () => context.push('/offer/${offer.id}'),
+            listingTitle: viewModel.listingIdMap[offer.listingId]!.title,
+            onTap: () => context.push('/listing-contractor/${offer.listingId}'),
           );
         },
       ),
@@ -174,9 +175,10 @@ class OffersOverviewScreenContent extends StatelessWidget {
 
 class _OfferCard extends StatelessWidget {
   final Offer offer;
+  final String listingTitle;
   final VoidCallback onTap;
 
-  const _OfferCard({required this.offer, required this.onTap});
+  const _OfferCard({required this.offer, required this.listingTitle, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +216,7 @@ class _OfferCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Listing: ${offer.listingId}', // You might want to load the actual listing title
+                      'Listing: $listingTitle', // You might want to load the actual listing title
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),

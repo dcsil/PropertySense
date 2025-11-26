@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
+import 'package:object_detect_test/domain/models/listing_model.dart';
 import 'package:object_detect_test/domain/models/offer_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 import 'package:object_detect_test/utils/toaster.dart';
@@ -15,6 +16,7 @@ class OffersViewModel extends ChangeNotifier {
   List<Offer> _allOffers = [];
   List<Offer> _filteredOffers = [];
   OfferStatus? _selectedFilter;
+  Map<String, Listing> listingIdMap = {}; 
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -47,6 +49,13 @@ class OffersViewModel extends ChangeNotifier {
         _filteredOffers = [];
       } else {
         _allOffers = (offerResult as Success<List<Offer>>).value;
+        final r = await _listingRepository.getListingsFromOffers(_allOffers); 
+        switch (r) {
+          case Failure():
+            Toaster.showErrorFromFailure(r);
+          case Success():
+            listingIdMap = r.value;
+        } 
         _applyFilter();
       }
     } catch (e) {

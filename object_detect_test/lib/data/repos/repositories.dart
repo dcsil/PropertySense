@@ -43,6 +43,7 @@ abstract class ListingRepository {
   Future<Result<void>> updateListingStatus(String listingId, ListingStatus newStatus);
   Future<Result<void>> createListingOffer(String listingId, String contractorId, Offer offer);
   Future<Result<List<Offer>>> getOffersForContractor(String uid);
+  Future<Result<Map<String, Listing>>> getListingsFromOffers(List<Offer> offers);
 }
 
 abstract class LocationRepository {

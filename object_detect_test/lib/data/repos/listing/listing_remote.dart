@@ -120,4 +120,29 @@ class ListingRepositoryRemote implements ListingRepository {
       return Failure('Failed to fetch offers: $e');
     }
   }
+
+  @override
+  Future<Result<Map<String, Listing>>> getListingsFromOffers(List<Offer> offers) async {
+    try {
+      Set<String> offersNoDup = {};
+      for (final offer in offers) {
+        offersNoDup.add(offer.listingId);
+      }
+      Map<String, Listing> ret = {};
+      for (final listingId in offersNoDup) {
+        final r = await getListing(listingId);
+        switch (r) {
+          case Failure():
+            throw Exception('could not get listings for given offers');
+          case Success():
+            ret[listingId] = r.value;
+        }
+      }
+      return Success(ret);
+    }
+    catch (e) {
+      print(e);
+      return Failure('could not get listings for given offers');
+    }
+  }
 }
