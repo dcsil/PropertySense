@@ -26,7 +26,7 @@ class HomeRepairDetector {
   List<Map<String, dynamic>> processOutput(
     List<dynamic> output, {
     double confidenceThreshold = 0.0,  // DEBUG: Set to 0 for debugging - show ALL detections
-    int maxDetections = 10,
+    int maxDetections = 1,
   }) {
     final List<Map<String, dynamic>> detections = [];
 
@@ -37,59 +37,79 @@ class HomeRepairDetector {
 
     try {
       // Output shape: [1, 11, 2100] — transposed format
-      final features = output[0] as List;  // 11 feature rows
-      final numFeatures = features.length;  // Should be 11 (4 bbox + 7 classes)
-      final numPredictions = (features[0] as List).length;  // Should be 2100
-      
+      final features = output[0] as List; // 11 feature rows
+      final numFeatures = features.length; // Should be 11 (4 bbox + 7 classes)
+      final numPredictions = (features[0] as List).length; // Should be 2100
+
       print('🔍 DEBUG: Output shape [$numFeatures, $numPredictions] (transposed)');
-      
+
       // YOLOv8 format: [cx, cy, w, h, class0, class1, ..., class6]
-      // No separate objectness score — class scores ARE the confidence
-      final numClasses = numFeatures - 4;  // 11 - 4 = 7 classes
-      
+      // No separate objectness score — class scores are logits
+      final numClasses = numFeatures - 4; // 11 - 4 = 7 classes
+
       if (numClasses != labels.length) {
         print('⚠️ Class count mismatch: model has $numClasses, labels has ${labels.length}');
       }
-      
+
+      // Choose normalization strategy:
+      // - useSoftmax = true: treat classes as mutually exclusive (softmax -> sum to 1)
+      // - useSoftmax = false: treat classes as independent (sigmoid per class -> multi-label)
+      const bool useSoftmax = true;
+
       int belowThreshold = 0;
-      
+
       // Iterate through each prediction (column)
       for (int i = 0; i < numPredictions; i++) {
         // Read features for prediction i (column i across all rows)
-        final cx = (features[0] as List)[i] as double;
-        final cy = (features[1] as List)[i] as double;
-        final w = (features[2] as List)[i] as double;
-        final h = (features[3] as List)[i] as double;
-        
-        // Find max class score (YOLOv8 outputs raw logits, need sigmoid!)
-        double maxScore = 0.0;
+        final cx = ((features[0] as List)[i] as num).toDouble();
+        final cy = ((features[1] as List)[i] as num).toDouble();
+        final w = ((features[2] as List)[i] as num).toDouble();
+        final h = ((features[3] as List)[i] as num).toDouble();
+
+        // Collect raw logits for all classes
+        final List<double> raw = List<double>.generate(numClasses, (c) {
+          return ((features[4 + c] as List)[i] as num).toDouble();
+        });
+
+        // Convert logits -> probabilities
+        List<double> probs;
+        if (useSoftmax) {
+          // Stable softmax
+          final double maxLogit = raw.reduce(math.max);
+          final exps = raw.map((r) => math.exp(r - maxLogit)).toList();
+          final double sumExp = exps.reduce((a, b) => a + b);
+          probs = exps.map((e) => e / sumExp).toList();
+        } else {
+          // Sigmoid per-class (for multi-label)
+          probs = raw.map((r) => _sigmoid(r)).toList();
+        }
+
+        // Find best class and its probability
+        double maxScore = -1.0;
         int maxIndex = 0;
-        
-        for (int c = 0; c < numClasses; c++) {
-          final rawScore = (features[4 + c] as List)[i] as double;
-          // Apply sigmoid to convert logits to probabilities
-          final score = _sigmoid(rawScore);
-          if (score > maxScore) {
-            maxScore = score;
+        for (int c = 0; c < probs.length; c++) {
+          if (probs[c] > maxScore) {
+            maxScore = probs[c];
             maxIndex = c;
           }
         }
-        
-        // After sigmoid, this is the actual confidence
+
         final confidence = maxScore;
-        
+
         // Debug first 3 predictions
         if (i < 3) {
           print('  Pred $i: cx=${cx.toStringAsFixed(3)}, cy=${cy.toStringAsFixed(3)}, w=${w.toStringAsFixed(3)}, h=${h.toStringAsFixed(3)}, conf=${confidence.toStringAsFixed(3)}, class=$maxIndex');
+          print('  raw logits: $raw');
+          print('  probs: $probs');
         }
-        
+
         if (confidence < confidenceThreshold) {
           belowThreshold++;
           continue;
         }
-        
+
         final label = maxIndex < labels.length ? labels[maxIndex] : 'Unknown';
-        
+
         detections.add({
           'label': label,
           'confidence': confidence,
@@ -101,12 +121,13 @@ class HomeRepairDetector {
           ],
         });
       }
-      
+
       print('📊 Processed $numPredictions predictions, $belowThreshold below threshold, ${detections.length} passed');
 
       // Sort by confidence and limit
       detections.sort((a, b) =>
           (b['confidence'] as double).compareTo(a['confidence'] as double));
+      print('length after sorting: ${detections.length}');
 
       return detections.length > maxDetections
           ? detections.sublist(0, maxDetections)
