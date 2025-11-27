@@ -7,6 +7,7 @@ import 'package:object_detect_test/ui/views/listing_map_screen.dart';
 import 'package:object_detect_test/ui/views/listing_swipe_screen.dart';
 import 'package:object_detect_test/ui/views/listings_screen.dart';
 import 'package:object_detect_test/ui/views/login_screen.dart';
+import 'package:object_detect_test/ui/views/offers_homeowner_screen.dart';
 import 'package:object_detect_test/ui/views/offers_overview_screen.dart';
 import 'package:object_detect_test/ui/views/profile_contractor_screen.dart';
 import 'package:object_detect_test/ui/views/profile_homeowner_screen.dart';
@@ -147,6 +148,21 @@ final GoRouter router = GoRouter(
           child: ScaffoldWithNavBar(
             currentIndex: 2,
             child: const OffersOverviewScreen(),
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return child;
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: '/inbox-homeowner',
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: ScaffoldWithNavBar(
+            currentIndex: 2,
+            child: const OffersHomeownerScreen(),
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return child;

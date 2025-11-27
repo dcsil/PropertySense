@@ -44,6 +44,9 @@ abstract class ListingRepository {
   Future<Result<void>> createListingOffer(String listingId, String contractorId, Offer offer);
   Future<Result<List<Offer>>> getOffersForContractor(String uid);
   Future<Result<Map<String, Listing>>> getListingsFromOffers(List<Offer> offers);
+  Future<Result<List<Offer>>> getOffersForHomeowner(String homeownerId);
+  Future<Result<void>> acceptOffer(String offerId, String listingId);
+  Future<Result<void>> completeAppointment(String offerId, String listingId);
 }
 
 abstract class LocationRepository {

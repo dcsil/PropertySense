@@ -122,7 +122,9 @@ class ListingRepositoryRemote implements ListingRepository {
   }
 
   @override
-  Future<Result<Map<String, Listing>>> getListingsFromOffers(List<Offer> offers) async {
+  Future<Result<Map<String, Listing>>> getListingsFromOffers(
+    List<Offer> offers,
+  ) async {
     try {
       Set<String> offersNoDup = {};
       for (final offer in offers) {
@@ -139,10 +141,78 @@ class ListingRepositoryRemote implements ListingRepository {
         }
       }
       return Success(ret);
-    }
-    catch (e) {
+    } catch (e) {
       print(e);
       return Failure('could not get listings for given offers');
+    }
+  }
+
+  // In ListingRepositoryRemote
+  @override
+  Future<Result<List<Offer>>> getOffersForHomeowner(String homeownerId) async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collectionGroup('offers')
+          .where('homeownerId', isEqualTo: homeownerId)
+          .get();
+
+      List<Offer> offers = querySnapshot.docs
+          .map((doc) => Offer.fromFirestore(doc, null))
+          .toList();
+
+      return Success(offers);
+    } catch (e) {
+      print(e);
+      return Failure('Failed to fetch offers: $e');
+    }
+  }
+
+  @override
+  Future<Result<void>> acceptOffer(String offerId, String listingId) async {
+    try {
+      await _firestore
+          .collection('listings')
+          .doc(listingId)
+          .collection('offers')
+          .doc(offerId)
+          .update({'status': OfferStatus.accepted.index});
+
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to accept offer: $e');
+    }
+  }
+
+  @override
+  Future<Result<void>> completeAppointment(
+    String offerId,
+    String listingId,
+  ) async {
+    try {
+      // Get all offers for this listing
+      final offersSnapshot = await _firestore
+          .collection('listings')
+          .doc(listingId)
+          .collection('offers')
+          .get();
+
+      // Batch update
+      final batch = _firestore.batch();
+
+      for (final doc in offersSnapshot.docs) {
+        if (doc.id == offerId) {
+          // Mark this one as finished
+          batch.update(doc.reference, {'status': OfferStatus.finished.index});
+        } else {
+          // Reject all others
+          batch.update(doc.reference, {'status': OfferStatus.rejected.index});
+        }
+      }
+
+      await batch.commit();
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to complete appointment: $e');
     }
   }
 }
