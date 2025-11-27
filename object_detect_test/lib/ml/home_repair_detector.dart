@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:math' as math;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 
@@ -13,19 +12,17 @@ class HomeRepairDetector {
     required this.labels,
   });
   
-  /// Apply sigmoid activation to convert logits to probabilities
-  double _sigmoid(double x) {
-    return 1.0 / (1.0 + math.exp(-x));
-  }
-  
   /// Process model output into detections
   /// YOLOv8 TFLite output is TRANSPOSED: [1, 11, 2100] where:
   ///   - 11 = features (4 bbox + 7 class scores) — NO separate objectness in YOLOv8!
   ///   - 2100 = number of predictions
   /// Each column is one prediction, each row is one feature.
+  /// 
+  /// NOTE: The fixed model outputs raw scores in range [0, 1] directly,
+  /// no sigmoid needed. Using raw scores prevents 0% becoming 50%.
   List<Map<String, dynamic>> processOutput(
     List<dynamic> output, {
-    double confidenceThreshold = 0.0,  // DEBUG: Set to 0 for debugging - show ALL detections
+    double confidenceThreshold = 0.25,  // Reasonable threshold for detections
     int maxDetections = 10,
   }) {
     final List<Map<String, dynamic>> detections = [];
@@ -61,21 +58,19 @@ class HomeRepairDetector {
         final w = (features[2] as List)[i] as double;
         final h = (features[3] as List)[i] as double;
         
-        // Find max class score (YOLOv8 outputs raw logits, need sigmoid!)
+        // Find max class score (fixed model outputs scores in [0, 1] range directly)
         double maxScore = 0.0;
         int maxIndex = 0;
         
         for (int c = 0; c < numClasses; c++) {
-          final rawScore = (features[4 + c] as List)[i] as double;
-          // Apply sigmoid to convert logits to probabilities
-          final score = _sigmoid(rawScore);
+          final score = (features[4 + c] as List)[i] as double;
           if (score > maxScore) {
             maxScore = score;
             maxIndex = c;
           }
         }
         
-        // After sigmoid, this is the actual confidence
+        // Use raw score as confidence (no sigmoid - prevents 0% becoming 50%)
         final confidence = maxScore;
         
         // Debug first 3 predictions
