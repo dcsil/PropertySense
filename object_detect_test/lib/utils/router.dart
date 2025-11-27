@@ -161,7 +161,7 @@ final GoRouter router = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           child: ScaffoldWithNavBar(
-            currentIndex: 2,
+            currentIndex: 1,
             child: const OffersHomeownerScreen(),
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
