@@ -55,7 +55,11 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
         if (dismissedListingIds.contains(listing.id)) {
           newDismissedListings.add(listing.id);
         }
-        _listingBuffer[listing.id] = listing;
+
+        if (listingTypeSet.contains(listing.listingType)) {
+          // print(listingTypeSet);
+          _listingBuffer[listing.id] = listing;
+        }
       }
 
       // Replace with a new Set copy
@@ -69,6 +73,32 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
     dismissedListingIds.add(listingId);
   }
 
+  Result<void> setListingTypeFilter(Set<ListingType> listingTypes) {
+    listingTypeSet = listingTypes;
+    for (final listingId in cachedListings.keys.toList()) {
+      final listing = cachedListings[listingId]!;
+      if (!listingTypeSet.contains(listing.listingType)) {
+        cachedListings.remove(listingId);
+      }
+    }
+    return Success(null);
+  }
+  Result<void> setRadiusMeters(double radiusMeters) {
+    this.radiusMeters = radiusMeters;
+    for (final listingId in cachedListings.keys.toList()) {
+      final listing = cachedListings[listingId]!;
+      final distance = calculateDistance(
+        _lastFetchedLocation.latitude,
+        _lastFetchedLocation.longitude,
+        listing.location.latitude,
+        listing.location.longitude,
+      );
+      if (distance > radiusMeters) {
+        cachedListings.remove(listingId);
+      }
+    }
+    return Success(null);
+  }
   /// Fetch listings from Firestore within a bounding box around the given location
   Future<Result<List<Listing>>> _fetchListingsFromFirestore(Location location) async {
     try {
@@ -77,8 +107,6 @@ class ContractorListingRepositoryRemote extends ContractorListingRepository {
       // Hardcoding to 100m
       // Use configured radius (km) from preferences
       // double radiusInKm = listingQueryPreferences.radiusInKm;
-      double radiusInKm = 2;
-      double radiusMeters = radiusInKm * 1000;
 
       // More accurate conversion using earth radius (meters)
       const double earthRadius = 6378137.0;

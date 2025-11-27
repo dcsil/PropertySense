@@ -17,15 +17,19 @@ class ListingMapViewModel extends ChangeNotifier {
   Location? maxLoc;
   Map<String, Listing> nearbyListings = {};
   List<Listing> listingPopupQ = [];
+  Map<String, Listing> listingQ = {};
   Set<String> alreadyPoppedupListings = {};
 
   StreamSubscription<Location>? _locationSubscription;
   StreamSubscription<Map<String, Listing>>? _listingSubscription;
 
+  ContractorListingRepository? _listingRepository;
+
   ListingMapViewModel(
     LocationRepository locationRepository,
     ContractorListingRepository listingRepository,
   ) {
+    _listingRepository = listingRepository;
     streamLocation(locationRepository);
     streamListings(listingRepository);
   }
@@ -78,15 +82,19 @@ class ListingMapViewModel extends ChangeNotifier {
       }
 
       if (!dismissedIds.contains(id) && !alreadyPoppedupListings.contains(id)) {
-        listingPopupQ.add(l);
+        listingQ[id] = l;
       }
     }
+    listingPopupQ = listingQ.values.toList();
     alreadyPoppedupListings = Set.from(newAlreadyPoppedupListings);
     nearbyListings = updatedListings;
   }
 
   void addToAlreadyPoppedUp(String listingId) async {
+    listingQ.remove(listingId);
     alreadyPoppedupListings.add(listingId);
+    nearbyListings.remove(listingId);
+    _listingRepository?.markListingAsDismissed(listingId);
     notifyListeners();
   }
 

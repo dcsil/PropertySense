@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/domain/models/contractor_details_model.dart';
+import 'package:object_detect_test/domain/models/listing_model.dart';
 import 'package:object_detect_test/ui/viewmodels/profile_contractor_viewmodel.dart';
 import 'package:object_detect_test/utils/toaster.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,7 @@ class ProfileContractorScreen extends StatelessWidget {
       create: (context) => ProfileContractorViewModel(
         context.read<AuthRepository>(),
         context.read<UserRepository>(),
+        context.read<ContractorListingRepository>(),
       ),
       child: const ProfileContractorContent(),
     );
@@ -34,6 +36,9 @@ class _ProfileContractorContentState extends State<ProfileContractorContent> {
   late TextEditingController _companyNameController;
   late TextEditingController _licenseNumberController;
   late TextEditingController _idPhotoUrlController;
+  
+  late Set<ListingType> _selectedListingTypes;
+  late double _radiusMeters;
 
   @override
   void initState() {
@@ -51,6 +56,9 @@ class _ProfileContractorContentState extends State<ProfileContractorContent> {
     _idPhotoUrlController = TextEditingController(
       text: viewModel.contractorDetails?.idPhotoUrl ?? '',
     );
+    
+    _selectedListingTypes = Set.from(viewModel.listingTypeSet);
+    _radiusMeters = viewModel.radiusMeters;
   }
 
   @override
@@ -182,6 +190,69 @@ class _ProfileContractorContentState extends State<ProfileContractorContent> {
                     ),
                   ],
                   
+                  const SizedBox(height: 24),
+                  
+                  // Job Preferences
+                  Text(
+                    'Job Preferences',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Job Types
+                  Text(
+                    'Job Types',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: ListingType.values.map((type) {
+                      final isSelected = _selectedListingTypes.contains(type);
+                      return FilterChip(
+                        label: Text(_getListingTypeLabel(type)),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedListingTypes.add(type);
+                            } else {
+                              _selectedListingTypes.remove(type);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Search Radius
+                  Text(
+                    'Search Radius: ${(_radiusMeters / 1000).toStringAsFixed(1)} km',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Slider(
+                    value: _radiusMeters,
+                    min: 500,
+                    max: 10000,
+                    divisions: 19,
+                    label: '${(_radiusMeters / 1000).toStringAsFixed(1)} km',
+                    onChanged: (value) {
+                      setState(() {
+                        _radiusMeters = value;
+                      });
+                    },
+                  ),
+                  
                   const SizedBox(height: 32),
                   
                   // Save button
@@ -230,6 +301,13 @@ class _ProfileContractorContentState extends State<ProfileContractorContent> {
       return;
     }
 
+    if (_selectedListingTypes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select at least one job type')),
+      );
+      return;
+    }
+
     final contractorDetails = ContractorDetails(
       companyName: _companyNameController.text,
       licenseNumber: _licenseNumberController.text,
@@ -242,6 +320,9 @@ class _ProfileContractorContentState extends State<ProfileContractorContent> {
       familyName: _familyNameController.text,
       contractorDetails: contractorDetails,
     );
+    
+    await viewModel.setListingTypeFilter(_selectedListingTypes);
+    await viewModel.setRadiusMeters(_radiusMeters);
 
     if (context.mounted) {
       Toaster.showSuccess('Profile updated successfully');
@@ -273,6 +354,29 @@ class _ProfileContractorContentState extends State<ProfileContractorContent> {
     if (confirmed == true && context.mounted) {
       await viewModel.signOut();
       context.go('/');
+    }
+  }
+
+  String _getListingTypeLabel(ListingType type) {
+    switch (type) {
+      case ListingType.roofing:
+        return 'Roofing';
+      case ListingType.exterior:
+        return 'Exterior';
+      case ListingType.structure:
+        return 'Structure';
+      case ListingType.electrical:
+        return 'Electrical';
+      case ListingType.heating:
+        return 'Heating';
+      case ListingType.cooling:
+        return 'Cooling';
+      case ListingType.insulation:
+        return 'Insulation';
+      case ListingType.plumbing:
+        return 'Plumbing';
+      case ListingType.interior:
+        return 'Interior';
     }
   }
 }

@@ -60,7 +60,9 @@ class ListingMapScreenContent extends StatelessWidget {
 
   void _showNextPopup(ListingMapViewModel vm) {
     if (vm.listingPopupQ.isNotEmpty) {
+      print(vm.alreadyPoppedupListings);
       vm.addToAlreadyPoppedUp(vm.listingPopupQ.first.id);
+      print(vm.alreadyPoppedupListings);
       vm.listingPopupQ.removeAt(0);
     }
   }
@@ -109,46 +111,46 @@ class ListingMapScreenContent extends StatelessWidget {
                 ),
               ),
             ),
-            Marker(
-              point: LatLng(
-                viewModel.maxLoc == null ? 0.0 : viewModel.maxLoc!.latitude,
-                viewModel.maxLoc == null ? 0.0 : viewModel.maxLoc!.longitude,
-              ),
-              width: 40,
-              height: 40,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                ),
-                child: const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-            Marker(
-              point: LatLng(
-                viewModel.minLoc == null ? 0.0 : viewModel.minLoc!.latitude,
-                viewModel.minLoc == null ? 0.0 : viewModel.minLoc!.longitude,
-              ),
-              width: 40,
-              height: 40,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                ),
-                child: const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
+            // Marker(
+            //   point: LatLng(
+            //     viewModel.maxLoc == null ? 0.0 : viewModel.maxLoc!.latitude,
+            //     viewModel.maxLoc == null ? 0.0 : viewModel.maxLoc!.longitude,
+            //   ),
+            //   width: 40,
+            //   height: 40,
+            //   child: Container(
+            //     decoration: BoxDecoration(
+            //       color: Colors.red,
+            //       shape: BoxShape.circle,
+            //       border: Border.all(color: Colors.white, width: 3),
+            //     ),
+            //     child: const Icon(
+            //       Icons.location_on,
+            //       color: Colors.white,
+            //       size: 20,
+            //     ),
+            //   ),
+            // ),
+            // Marker(
+            //   point: LatLng(
+            //     viewModel.minLoc == null ? 0.0 : viewModel.minLoc!.latitude,
+            //     viewModel.minLoc == null ? 0.0 : viewModel.minLoc!.longitude,
+            //   ),
+            //   width: 40,
+            //   height: 40,
+            //   child: Container(
+            //     decoration: BoxDecoration(
+            //       color: Colors.purple,
+            //       shape: BoxShape.circle,
+            //       border: Border.all(color: Colors.white, width: 3),
+            //     ),
+            //     child: const Icon(
+            //       Icons.location_on,
+            //       color: Colors.white,
+            //       size: 20,
+            //     ),
+              // ),
+            // ),
           ],
         ),
         
@@ -160,8 +162,8 @@ class ListingMapScreenContent extends StatelessWidget {
                 listing.location.latitude,
                 listing.location.longitude,
               ),
-              width: 40,
-              height: 40,
+              width: 100,
+              height: 50,
               child: GestureDetector(
                 onTap: () => context.push('/listing-contractor/${listing.id}'),
                 child: _ListingMarker(listing: listing),

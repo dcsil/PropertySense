@@ -62,6 +62,11 @@ abstract class ContractorListingRepository {
   // and did not stay persistent (dispose call everytime we just switch pages ffs)
   // so here we are putting the seenListings back in the fucking data sources
   Set<String> dismissedListingIds = {};
+  
+  Set<ListingType> listingTypeSet = ListingType.values.toSet();
+  double radiusMeters = 1000;
   Future<Result<Stream<Map<String, Listing>>>> nearbyListingsBufferStream();
   void markListingAsDismissed(String listingId);
+  Result<void> setListingTypeFilter(Set<ListingType> listingTypes);
+  Result<void> setRadiusMeters(double radiusMeters);
 }
