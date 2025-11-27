@@ -14,6 +14,7 @@
  */
 
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,7 @@ import 'package:object_detect_test/ml/model_loader.dart';
 import 'package:object_detect_test/ml/home_repair_detector.dart';
 import 'package:object_detect_test/domain/services/price_predictor.dart';
 import 'package:object_detect_test/ui/views/defect_report_screen.dart';
+import 'package:object_detect_test/utils/toaster.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -46,6 +48,9 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _isDetecting = false;
   bool _isModelLoaded = false;
   bool _isCameraAvailable = false;
+  
+  // Captured images for report generation
+  List<Map<String, dynamic>> _capturedDetections = [];
   
   // Backup image mode (only when no camera)
   Uint8List? _testImageBytes;
@@ -124,25 +129,68 @@ class _CameraScreenState extends State<CameraScreen> {
       
       // Preprocess image using detector
       final inputBytes = _detector!.preprocessImage(rgbImage, inputWidth);
+      
+      // DEBUG: Print first few pixel values to verify input changes each frame
+      final debugSample = inputBytes.sublist(0, 9);
+      print('🖼️ Input sample (first 3 pixels RGB): ${debugSample.map((v) => v.toStringAsFixed(3)).toList()}');
+      
       final input = inputBytes.reshape([1, inputHeight, inputWidth, 3]);
       
-      // Prepare output buffer
+      // Prepare output buffer using Map for proper tensor handling
       final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
-      final output = List.generate(
+      print('📐 Output tensor shape: $outputShape');
+      
+      // Use a map with index 0 for the single output tensor
+      final outputBuffer = List.generate(
         outputShape[0],
         (i) => List.generate(
           outputShape[1],
           (j) => List.filled(outputShape[2], 0.0),
         ),
       );
+      final outputs = {0: outputBuffer};
       
-      // Run inference
-      ModelLoader.interpreter.run(input, output);
+      // Run inference with runForMultipleInputs for proper tensor handling
+      ModelLoader.interpreter.runForMultipleInputs([input], outputs);
+      final output = outputs[0]!;
+      
+      // DEBUG: Print samples from multiple rows to verify model is actually running
+      if (output.isNotEmpty && output[0] is List && (output[0] as List).isNotEmpty) {
+        final features = output[0] as List;
+        print('📤 Output row 0 (cx): ${(features[0] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}');
+        print('📤 Output row 4 (class0): ${(features[4] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}');
+        print('📤 Output row 10 (class6): ${(features[10] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}');
+        
+        // Check raw logits and sigmoid-applied scores
+        double maxRawScore = -double.infinity;
+        double minRawScore = double.infinity;
+        for (int row = 4; row < 11; row++) {
+          for (var val in (features[row] as List)) {
+            final v = val as double;
+            if (v > maxRawScore) maxRawScore = v;
+            if (v < minRawScore) minRawScore = v;
+          }
+        }
+        // Apply sigmoid to see actual probabilities
+        double sigmoid(double x) => 1.0 / (1.0 + math.exp(-x));
+        print('📊 Raw logit range: min=${minRawScore.toStringAsFixed(4)}, max=${maxRawScore.toStringAsFixed(4)}');
+        print('📊 After sigmoid: min=${sigmoid(minRawScore).toStringAsFixed(4)}, max=${sigmoid(maxRawScore).toStringAsFixed(4)}');
+      }
       
       // Process results using detector
       final detections = _detector!.processOutput(output);
       if (mounted) {
+        final previousCount = _detections?.length ?? 0;
         setState(() => _detections = detections);
+        
+        // Show detections via Toaster (only when count changes significantly)
+        if (detections.isNotEmpty && detections.length != previousCount) {
+          final detectionsText = detections.take(3).map((d) => 
+            '${d['label']}: ${(d['confidence'] as double).toStringAsFixed(2)}'
+          ).join(', ');
+          final moreText = detections.length > 3 ? ' (+${detections.length - 3} more)' : '';
+          Toaster.showInfo('${detections.length} detected: $detectionsText$moreText');
+        }
       }
     } catch (e) {
       print('Frame processing error: $e');
@@ -317,17 +365,102 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
 
-  /// Generate cost report from current detections
+  /// Capture image and run detection
+  Future<void> _captureAndDetect() async {
+    if (_controller == null || !_controller!.value.isInitialized || _detector == null) {
+      print('Camera or detector not ready');
+      return;
+    }
+
+    setState(() => _isDetecting = true);
+
+    try {
+      // Capture image
+      final XFile image = await _controller!.takePicture();
+      final bytes = await File(image.path).readAsBytes();
+      final decodedImage = img.decodeImage(bytes);
+      
+      if (decodedImage == null) {
+        print('Failed to decode captured image');
+        setState(() => _isDetecting = false);
+        return;
+      }
+
+      // Get model requirements
+      final inputShape = ModelLoader.interpreter.getInputTensor(0).shape;
+      final inputSize = inputShape[1];
+
+      // Preprocess and run detection
+      final inputBytes = _detector!.preprocessImage(decodedImage, inputSize);
+      final input = inputBytes.reshape([1, inputSize, inputSize, 3]);
+
+      final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
+      final output = List.generate(
+        outputShape[0],
+        (i) => List.generate(
+          outputShape[1],
+          (j) => List.filled(outputShape[2], 0.0),
+        ),
+      );
+
+      ModelLoader.interpreter.run(input, output);
+      final detections = _detector!.processOutput(output);
+
+      // Store detections (avoid duplicates by checking confidence and class)
+      for (var detection in detections) {
+        _capturedDetections.add({
+          'class': detection['label'],
+          'confidence': detection['confidence'],
+        });
+      }
+
+      print('Captured image with ${detections.length} detections. Total: ${_capturedDetections.length}');
+      
+      // Show feedback
+      if (mounted) {
+        Toaster.showSuccess('Captured ${detections.length} defect(s)');
+      }
+    } catch (e) {
+      print('Error capturing and detecting: $e');
+    } finally {
+      setState(() => _isDetecting = false);
+    }
+  }
+
+  /// Generate cost report from captured detections (deduplicated)
   void _generateReport() {
-    if (_detections == null || _detections!.isEmpty) return;
+    if (_capturedDetections.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No defects captured. Take photos first!'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     final pricePredictor = PricePredictor();
     
-    // Convert detections to format expected by price predictor
-    final detectionsForPredictor = _detections!.map((d) => {
-      'class': d['label'] as String,
-      'confidence': d['confidence'] as double,
+    // Deduplicate detections by grouping similar classes with high confidence
+    final Map<String, double> deduplicatedMap = {};
+    for (var detection in _capturedDetections) {
+      final className = detection['class'] as String;
+      final confidence = detection['confidence'] as double;
+      
+      // Keep the highest confidence for each class
+      if (!deduplicatedMap.containsKey(className) || 
+          deduplicatedMap[className]! < confidence) {
+        deduplicatedMap[className] = confidence;
+      }
+    }
+    
+    // Convert back to list format
+    final detectionsForPredictor = deduplicatedMap.entries.map((e) => {
+      'class': e.key,
+      'confidence': e.value,
     }).toList();
+    
+    print('Deduplicated ${_capturedDetections.length} detections to ${detectionsForPredictor.length} unique defects');
     
     // Get cost predictions
     final predictedDetections = pricePredictor.predictBatch(detectionsForPredictor);
@@ -380,7 +513,7 @@ class _CameraScreenState extends State<CameraScreen> {
             Positioned.fill(
               child: CameraPreview(_controller!),
             ),
-            // Detection overlay
+            // Detection overlay (live detection boxes)
             if (_detections != null)
               ..._detections!.map((d) => _buildDetectionBox(d)),
             // Status indicator
@@ -390,16 +523,15 @@ class _CameraScreenState extends State<CameraScreen> {
               right: 16,
               child: _buildDetectionStatus(),
             ),
+            // Bottom controls
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: _buildCameraControls(),
+            ),
           ],
         ),
-        floatingActionButton: _detections != null && _detections!.isNotEmpty
-            ? FloatingActionButton.extended(
-                onPressed: _generateReport,
-                icon: const Icon(Icons.assessment),
-                label: const Text('Generate Report'),
-                backgroundColor: Colors.blue,
-              )
-            : null,
       );
     }
 
@@ -509,14 +641,71 @@ class _CameraScreenState extends State<CameraScreen> {
             size: 16,
           ),
           const SizedBox(width: 8),
-                          Text(
+          Text(
             _detections != null && _detections!.isNotEmpty
                 ? '${_detections!.length} objects detected'
                 : 'Scanning...',
             style: const TextStyle(color: Colors.white, fontSize: 14),
-                          ),
-                        ],
-                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build camera controls (capture and report buttons)
+  Widget _buildCameraControls() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Captured count indicator
+        if (_capturedDetections.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '${_capturedDetections.length} defect(s) captured',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        // Control buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Generate Report button
+            if (_capturedDetections.isNotEmpty)
+              ElevatedButton.icon(
+                onPressed: _generateReport,
+                icon: const Icon(Icons.assessment),
+                label: const Text('Generate Report'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            if (_capturedDetections.isNotEmpty)
+              const SizedBox(width: 16),
+            // Capture button
+            FloatingActionButton.large(
+              onPressed: _isDetecting ? null : _captureAndDetect,
+              backgroundColor: Colors.white,
+              child: _isDetecting
+                  ? const CircularProgressIndicator(strokeWidth: 2)
+                  : const Icon(Icons.camera_alt, size: 32, color: Colors.black),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
