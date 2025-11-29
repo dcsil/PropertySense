@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
-import 'package:object_detect_test/domain/models/auth_model.dart';
 import 'package:object_detect_test/domain/models/user_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 
@@ -60,5 +59,17 @@ class UserRepositoryRemote implements UserRepository {
       print(e);
       return Failure('Failed to fetch user: $e');
     }
+  }
+
+  Future<Result<void>> updateUserDocument(User user) {
+    return Future.sync(() async {
+      try {
+        await _firestore.collection('users').doc(user.id).update(user.toFirestore());
+        currentUser = user;
+        return Success(null);
+      } catch (e) {
+        return Failure('Failed to update user document: $e');
+      }
+    });
   }
 }

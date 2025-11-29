@@ -206,11 +206,6 @@ class CreateListingViewModel extends ChangeNotifier {
     return _images.map((img) => 'https://placeholder.com/${img.name}').toList();
   }
 
-  String _getDefaultLocation() {
-    // TODO: Get user's default location from user profile or device
-    return 'San Francisco, CA';
-  }
-
   void clearError() {
     _errorMessage = null;
     notifyListeners();

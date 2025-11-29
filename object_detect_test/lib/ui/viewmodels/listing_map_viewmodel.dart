@@ -7,29 +7,35 @@ import 'package:object_detect_test/domain/models/listing_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 import 'package:object_detect_test/utils/toaster.dart';
 
-class ListingSwipeViewModel extends ChangeNotifier {
-
-  Location currLocation = Location(latitude: 0, longitude: 0, timestamp: DateTime.now());
-  List<Listing> nearbyListings = [];
+class ListingMapViewModel extends ChangeNotifier {
+  Location currLocation = Location(
+    latitude: 0,
+    longitude: 0,
+    timestamp: DateTime.now(),
+  );
+  Location? minLoc;
+  Location? maxLoc;
+  Map<String, Listing> nearbyListings = {};
+  List<Listing> listingPopupQ = [];
+  Map<String, Listing> listingQ = {};
+  Set<String> alreadyPoppedupListings = {};
 
   StreamSubscription<Location>? _locationSubscription;
   StreamSubscription<Map<String, Listing>>? _listingSubscription;
 
-  // TODO: I really don't want to keep the listingrepository ref here but I need it for markDismissed();
-  ContractorListingRepository? _lr;
+  ContractorListingRepository? _listingRepository;
 
-  ListingSwipeViewModel(
+  ListingMapViewModel(
     LocationRepository locationRepository,
-    ContractorListingRepository listingRepository, 
-    ) {
-    _lr = listingRepository;
+    ContractorListingRepository listingRepository,
+  ) {
+    _listingRepository = listingRepository;
     streamLocation(locationRepository);
     streamListings(listingRepository);
   }
 
   void streamLocation(LocationRepository locationRepository) async {
     currLocation = locationRepository.cachedLocation;
-    notifyListeners();
     final r = await locationRepository.locationStream();
     switch (r) {
       case Failure():
@@ -38,44 +44,58 @@ class ListingSwipeViewModel extends ChangeNotifier {
         Stream<Location> s = r.value;
         _locationSubscription = s.listen((location) {
           currLocation = location;
+          // FOR DEBUGGING
+          minLoc = locationRepository.minLoc;
+          maxLoc = locationRepository.maxLoc;
           notifyListeners();
         });
     }
   }
 
   void streamListings(ContractorListingRepository lr) async {
-    nearbyListings = processNewListings(lr.cachedListings);
-    notifyListeners();
+    processNewListings(lr.cachedListings, lr.dismissedListingIds);
     Result r = await lr.nearbyListingsBufferStream();
     switch (r) {
       case Failure():
         Toaster.showErrorFromFailure(r);
       case Success():
-        Stream<Map<String, Listing>> s = r.value; 
+        Stream<Map<String, Listing>> s = r.value;
 
         _listingSubscription = s.listen((newListings) {
-          nearbyListings = processNewListings(newListings);
+          processNewListings(newListings, lr.dismissedListingIds);
           notifyListeners();
         });
     }
   }
 
-  void markListingAsDismissed(String listingId) async {
-    _lr!.markListingAsDismissed(listingId);
-    nearbyListings.remove(listingId);
-    notifyListeners();
-  }
-
-  List<Listing> processNewListings(Map<String, Listing> newListings) {
+  void processNewListings(Map<String, Listing> newListings, Set<String> dismissedIds) {
     Map<String, Listing> updatedListings = {};
+    Set<String> newAlreadyPoppedupListings = {};
+
     for (final kv in newListings.entries){
       final id = kv.key;
       final l = kv.value;
-      if (!_lr!.dismissedListingIds.contains(id)) {
-        updatedListings[id] = l;
+      updatedListings[id] = l;
+
+      if (alreadyPoppedupListings.contains(id)) {
+        newAlreadyPoppedupListings.add(id);
+      }
+
+      if (!dismissedIds.contains(id) && !alreadyPoppedupListings.contains(id)) {
+        listingQ[id] = l;
       }
     }
-    return updatedListings.values.toList();
+    listingPopupQ = listingQ.values.toList();
+    alreadyPoppedupListings = Set.from(newAlreadyPoppedupListings);
+    nearbyListings = updatedListings;
+  }
+
+  void addToAlreadyPoppedUp(String listingId) async {
+    listingQ.remove(listingId);
+    alreadyPoppedupListings.add(listingId);
+    nearbyListings.remove(listingId);
+    _listingRepository?.markListingAsDismissed(listingId);
+    notifyListeners();
   }
 
   @override

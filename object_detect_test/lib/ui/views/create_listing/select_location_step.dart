@@ -33,26 +33,27 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
 
     final viewModel = context.read<CreateListingViewModel>();
     final loc = viewModel.location;
-    if (loc != null) {
-      // set selected location and try to get its placemark/address
-      _selectedLocation = loc;
-      placemarkFromCoordinates(loc.latitude, loc.longitude).then((plist) {
-        final placemark = plist.isNotEmpty ? plist.first : null;
-        setState(() {
-          _searchResults = [loc];
-          _placemarks = placemark != null ? [placemark] : [];
-          _searchController.text =
-              placemark != null ? _formatAddress(placemark) : '';
+    // set selected location and try to get its placemark/address
+    _selectedLocation = loc;
+    placemarkFromCoordinates(loc.latitude, loc.longitude)
+        .then((plist) {
+          final placemark = plist.isNotEmpty ? plist.first : null;
+          setState(() {
+            _searchResults = [loc];
+            _placemarks = placemark != null ? [placemark] : [];
+            _searchController.text = placemark != null
+                ? _formatAddress(placemark)
+                : '';
+          });
+        })
+        .catchError((e) {
+          debugPrint('Error getting initial placemark: $e');
+          setState(() {
+            _searchResults = [loc];
+            _placemarks = [];
+            _searchController.text = '';
+          });
         });
-      }).catchError((e) {
-        debugPrint('Error getting initial placemark: $e');
-        setState(() {
-          _searchResults = [loc];
-          _placemarks = [];
-          _searchController.text = '';
-        });
-      });
-    }
   }
 
   Future<void> _searchAddress(String query) async {
@@ -76,7 +77,9 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
       final placemarks = <Placemark>[];
       for (final location in locations) {
         try {
-          debugPrint('Found location: ${location.latitude}, ${location.longitude}');
+          debugPrint(
+            'Found location: ${location.latitude}, ${location.longitude}',
+          );
           final locationPlacemarks = await placemarkFromCoordinates(
             location.latitude,
             location.longitude,
@@ -152,16 +155,16 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
         children: [
           Text(
             'Where do you need this done?',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             'This helps us find contractors in your area',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 24),
           TextField(
@@ -241,8 +244,8 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
                   Text(
                     'Select your location:',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Expanded(
@@ -258,10 +261,9 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
                           color: isSelected
-                              ? Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.1)
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.primary.withOpacity(0.1)
                               : null,
                           child: ListTile(
                             leading: Icon(
@@ -271,7 +273,8 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
                                   : null,
                             ),
                             title: Text(
-                              placemark.street != null && placemark.street!.isNotEmpty
+                              placemark.street != null &&
+                                      placemark.street!.isNotEmpty
                                   ? _formatAddress(placemark)
                                   : '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
                               style: TextStyle(
@@ -287,7 +290,9 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
                             trailing: isSelected
                                 ? Icon(
                                     Icons.check_circle,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   )
                                 : null,
                             onTap: () => _selectAddress(index),
@@ -313,10 +318,7 @@ class _SelectLocationStepState extends State<SelectLocationStep> {
                     const SizedBox(height: 16),
                     Text(
                       'Search for your location above',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 16),
                     ),
                   ],
                 ),
