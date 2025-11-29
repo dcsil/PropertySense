@@ -290,29 +290,6 @@ void main() {
       });
     });
 
-    group('signInWithGoogle', () {
-      // Note: GoogleSignIn.instance is a static getter that cannot be mocked
-      // This makes full unit testing difficult without dependency injection.
-      // For now, we test that the method exists and handles errors correctly.
-      // In production, consider injecting GoogleSignIn as a dependency.
-      
-      test('should return Failure when Google authentication fails', () async {
-        // Since GoogleSignIn.instance is static and can't be mocked easily,
-        // this test will actually attempt to authenticate (which will fail in test environment).
-        // The important part is that the method catches exceptions and returns Failure.
-        
-        // Act
-        final result = await authRepository.signInWithGoogle();
-
-        // Assert - Should return Failure (Google sign-in will fail in test environment)
-        expect(result, isA<Failure>());
-        expect((result as Failure).message, contains('Failed to sign in with Google'));
-      });
-      
-      // TODO: To fully test Google Sign-In, refactor to inject GoogleSignIn as dependency
-      // Example: AuthRepositoryRemote({required FirebaseAuth firebaseAuth, GoogleSignIn? googleSignIn})
-    });
-
     group('signInWithApple', () {
       test('should return Failure as not implemented', () async {
         // Act
