@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
-import 'package:object_detect_test/domain/models/auth_model.dart';
 import 'package:object_detect_test/domain/models/user_model.dart';
 import 'package:object_detect_test/utils/result.dart';
 

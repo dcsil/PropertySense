@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:object_detect_test/data/repos/listing/contractor_listing_remote.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
 import 'package:object_detect_test/domain/models/listing_model.dart';
 import 'package:object_detect_test/ui/viewmodels/listing_swipe_viewmodel.dart';
@@ -13,10 +14,11 @@ class ListingSwipeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('build ListingSwipeScreen');
     return ChangeNotifierProvider(
       create: (context) => ListingSwipeViewModel(
+        context.read<LocationRepository>(),
         context.read<ContractorListingRepository>(),
-        context.read<UserRepository>(),
       ),
       child: const ListingSwipeScreenContents(),
     );
@@ -39,40 +41,10 @@ class ListingSwipeScreenContents extends StatelessWidget {
   }
 
   Widget _buildSwipeBody(BuildContext context, ListingSwipeViewModel viewModel) {
-    if (viewModel.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
+    // Get unseen listings as a list
+    final unseenListings = viewModel.nearbyListings;
 
-    if (viewModel.errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              viewModel.errorMessage!,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: viewModel.refreshListings,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (viewModel.listings.isEmpty) {
+    if (unseenListings.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -102,22 +74,22 @@ class ListingSwipeScreenContents extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: CardSwiper(
-        cardsCount: viewModel.listings.length,
+        cardsCount: unseenListings.length,
         cardBuilder: (context, index, percentThresholdX, percentThresholdY) {
-          final listing = viewModel.listings[index];
+          final listing = unseenListings[index];
           return _SwipeableListingCard(
             listing: listing,
             viewModel: viewModel,
           );
         },
         onSwipe: (previousIndex, currentIndex, direction) {
-          final listing = viewModel.listings[previousIndex];
+          final listing = unseenListings[previousIndex];
           
           if (direction == CardSwiperDirection.left) {
-            viewModel.markListingAsSeen(listing.id);
+            viewModel.markListingAsDismissed(listing.id);
             return true;
           } else if (direction == CardSwiperDirection.right) {
-            viewModel.markListingAsSeen(listing.id);
+            viewModel.markListingAsDismissed(listing.id);
             context.push('/listing-contractor/${listing.id}?offer=true');
             return true;
           }
@@ -125,7 +97,7 @@ class ListingSwipeScreenContents extends StatelessWidget {
           return false;
         },
         isLoop: false,
-        numberOfCardsDisplayed: min(3, viewModel.listings.length),
+        numberOfCardsDisplayed: min(3, unseenListings.length),
       ),
     );
   }
@@ -142,12 +114,13 @@ class _SwipeableListingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final distance = _calculateDistance(
-      viewModel.currentLocation.latitude,
-      viewModel.currentLocation.longitude,
+    final distance = ContractorListingRepositoryRemote.calculateDistance(
+      viewModel.currLocation.latitude,
+      viewModel.currLocation.longitude,
       listing.location.latitude,
       listing.location.longitude,
     );
+    print(distance);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -219,25 +192,6 @@ class _SwipeableListingCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const double earthRadius = 6371000; // meters
-    double dLat = _degreesToRadians(lat2 - lat1);
-    double dLon = _degreesToRadians(lon2 - lon1);
-
-    double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_degreesToRadians(lat1)) *
-            cos(_degreesToRadians(lat2)) *
-            sin(dLon / 2) *
-            sin(dLon / 2);
-
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return earthRadius * c;
-  }
-
-  double _degreesToRadians(double degrees) {
-    return degrees * pi / 180;
   }
 
   String _formatDistance(double meters) {

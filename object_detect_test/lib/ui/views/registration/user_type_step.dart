@@ -39,7 +39,6 @@ class UserTypeStep extends StatelessWidget {
                   isSelected: viewModel.userType == UserType.homeowner,
                   onTap: () {
                     viewModel.userType = UserType.homeowner;
-                    viewModel.notifyListeners();
                   },
                 ),
                 const SizedBox(height: 16),

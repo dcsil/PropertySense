@@ -7,20 +7,20 @@ import 'package:object_detect_test/utils/result.dart';
 class ListingRepositoryRemote implements ListingRepository {
   final FirebaseFirestore _firestore;
   ListingRepositoryRemote({required FirebaseFirestore firestore})
-      : _firestore = firestore;
+    : _firestore = firestore;
 
   @override
   Future<Result<List<Listing>>> getListings(String uid) async {
     print(uid);
     try {
       final querySnapshot = await _firestore
-        .collection('listings')
-        .where('author', isEqualTo: uid)
-        .get();
+          .collection('listings')
+          .where('author', isEqualTo: uid)
+          .get();
 
       final listings = querySnapshot.docs
-        .map((doc) => Listing.fromFirestore(doc, null))
-        .toList();
+          .map((doc) => Listing.fromFirestore(doc, null))
+          .toList();
 
       return Success(listings);
     } catch (e) {
@@ -55,7 +55,7 @@ class ListingRepositoryRemote implements ListingRepository {
       return Failure('Failed to create user document: $e');
     }
   }
-  
+
   @override
   Future<Result<void>> deleteListing(String listingId) async {
     try {
@@ -65,33 +65,154 @@ class ListingRepositoryRemote implements ListingRepository {
       return Failure('Failed to delete listing: $e');
     }
   }
-  
-  
+
   @override
-  Future<Result<void>> updateListingStatus(String listingId, ListingStatus newStatus) async {
+  Future<Result<void>> updateListingStatus(
+    String listingId,
+    ListingStatus newStatus,
+  ) async {
     try {
-      await _firestore
-        .collection('listings')
-        .doc(listingId)
-        .update({'listingStatus': newStatus.index});
+      await _firestore.collection('listings').doc(listingId).update({
+        'listingStatus': newStatus.index,
+      });
 
       return Success(null);
     } catch (e) {
       return Future.value(Failure('Failed to update listing status: $e'));
     }
   }
+
   @override
-  Future<Result<void>> createListingOffer(String listingId, String contractorId, Offer offer) async {
+  Future<Result<void>> createListingOffer(
+    String listingId,
+    String contractorId,
+    Offer offer,
+  ) async {
     try {
       await _firestore
-      .collection('listings')
-      .doc(listingId)
-      .collection('offers')
-      .add(offer.toFirestore());
+          .collection('listings')
+          .doc(listingId)
+          .collection('offers')
+          .add(offer.toFirestore());
       return Success(null);
-    }
-    catch (e) {
+    } catch (e) {
       return Failure('Failed to make offer on listing: $e');
     }
   }
-} 
+
+  Future<Result<List<Offer>>> getOffersForContractor(
+    String contractorId,
+  ) async {
+    try {
+      // Query across ALL offers subcollections
+      QuerySnapshot querySnapshot = await _firestore
+          .collectionGroup('offers') // searches all 'offers' subcollections
+          .where('contractorId', isEqualTo: contractorId)
+          .get();
+
+      List<Offer> offers = querySnapshot.docs
+          .map((doc) => Offer.fromFirestore(doc, null))
+          .toList();
+
+      return Success(offers);
+    } catch (e) {
+      print(e);
+      return Failure('Failed to fetch offers: $e');
+    }
+  }
+
+  @override
+  Future<Result<Map<String, Listing>>> getListingsFromOffers(
+    List<Offer> offers,
+  ) async {
+    try {
+      Set<String> offersNoDup = {};
+      for (final offer in offers) {
+        offersNoDup.add(offer.listingId);
+      }
+      Map<String, Listing> ret = {};
+      for (final listingId in offersNoDup) {
+        final r = await getListing(listingId);
+        switch (r) {
+          case Failure():
+            throw Exception('could not get listings for given offers');
+          case Success():
+            ret[listingId] = r.value;
+        }
+      }
+      return Success(ret);
+    } catch (e) {
+      print(e);
+      return Failure('could not get listings for given offers');
+    }
+  }
+
+  // In ListingRepositoryRemote
+  @override
+  Future<Result<List<Offer>>> getOffersForHomeowner(String homeownerId) async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collectionGroup('offers')
+          .where('homeownerId', isEqualTo: homeownerId)
+          .get();
+
+      List<Offer> offers = querySnapshot.docs
+          .map((doc) => Offer.fromFirestore(doc, null))
+          .toList();
+
+      return Success(offers);
+    } catch (e) {
+      print(e);
+      return Failure('Failed to fetch offers: $e');
+    }
+  }
+
+  @override
+  Future<Result<void>> acceptOffer(String offerId, String listingId) async {
+    try {
+      await _firestore
+          .collection('listings')
+          .doc(listingId)
+          .collection('offers')
+          .doc(offerId)
+          .update({'status': OfferStatus.accepted.index});
+
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to accept offer: $e');
+    }
+  }
+
+  @override
+  Future<Result<void>> completeAppointment(
+    String offerId,
+    String listingId,
+  ) async {
+    try {
+      // Get all offers for this listing
+      final offersSnapshot = await _firestore
+          .collection('listings')
+          .doc(listingId)
+          .collection('offers')
+          .get();
+
+      // Batch update
+      final batch = _firestore.batch();
+
+      for (final doc in offersSnapshot.docs) {
+        if (doc.id == offerId) {
+          // Mark this one as finished
+          batch.update(doc.reference, {'status': OfferStatus.finished.index});
+        } else {
+          // Reject all others
+          batch.update(doc.reference, {'status': OfferStatus.rejected.index});
+        }
+      }
+
+      await batch.commit();
+      return Success(null);
+    } catch (e) {
+      return Failure('Failed to complete appointment: $e');
+    }
+  }
+}

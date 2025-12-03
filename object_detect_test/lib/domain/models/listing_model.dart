@@ -67,9 +67,10 @@ class Listing {
       createdDate: map?['createdDate'] as Timestamp? ?? Timestamp.now(),
       // TODO: don't make location from geopoint under User
       location: (() {
-        final geo = map?['location'] as GeoPoint?;
-        return geo != null
-        ? User.locationFromGeoPoint(geo)
+        final lat = map?['latitude'] as double?;
+        final lon = map?['longitude'] as double?;
+        return lat != null && lon != null
+        ? Location(latitude: lat, longitude: lon, timestamp: Timestamp.now().toDate())
         : Location(latitude: 0.0, longitude: 0.0, timestamp: Timestamp.now().toDate());
       })(),
     );
@@ -86,7 +87,8 @@ class Listing {
       'listingStatus': listingStatus.index,
       'listingType': listingType.index,
       'createdDate': createdDate,
-      'location': GeoPoint(location.latitude, location.longitude),
+      'latitude': location.latitude,
+      'longitude': location.longitude,
     };
   }
 
