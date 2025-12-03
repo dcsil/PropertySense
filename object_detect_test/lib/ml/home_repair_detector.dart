@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:math' as math;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 
@@ -12,50 +13,103 @@ class HomeRepairDetector {
     required this.labels,
   });
   
+  /// Apply sigmoid activation to convert logits to probabilities
+  double _sigmoid(double x) {
+    return 1.0 / (1.0 + math.exp(-x));
+  }
+  
   /// Process model output into detections
-  /// Returns list of detections with label, confidence, and bbox
+  /// YOLOv8 TFLite output is TRANSPOSED: [1, 11, 2100] where:
+  ///   - 11 = features (4 bbox + 7 class scores) — NO separate objectness in YOLOv8!
+  ///   - 2100 = number of predictions
+  /// Each column is one prediction, each row is one feature.
   List<Map<String, dynamic>> processOutput(
     List<dynamic> output, {
-    double confidenceThreshold = 0.5,
-    int maxDetections = 10,
+    double confidenceThreshold = 0.0,  // DEBUG: Set to 0 for debugging - show ALL detections
+    int maxDetections = 1,
   }) {
     final List<Map<String, dynamic>> detections = [];
-    
-    if (output.isEmpty) return detections;
-    
+
+    if (output.isEmpty) {
+      print('⚠️ Output is empty');
+      return detections;
+    }
+
     try {
-      final batch = output[0] as List;
-      
-      for (var detection in batch) {
-        if ((detection as List).length < 5 + labels.length) continue;
-        
-        // Extract bbox (center format)
-        final cx = detection[0] as double;
-        final cy = detection[1] as double;
-        final w = detection[2] as double;
-        final h = detection[3] as double;
-        final objectness = detection[4] as double;
-        
-        // Find best class
-        double maxScore = 0.0;
+      // Output shape: [1, 11, 2100] — transposed format
+      final features = output[0] as List; // 11 feature rows
+      final numFeatures = features.length; // Should be 11 (4 bbox + 7 classes)
+      final numPredictions = (features[0] as List).length; // Should be 2100
+
+      print('🔍 DEBUG: Output shape [$numFeatures, $numPredictions] (transposed)');
+
+      // YOLOv8 format: [cx, cy, w, h, class0, class1, ..., class6]
+      // No separate objectness score — class scores are logits
+      final numClasses = numFeatures - 4; // 11 - 4 = 7 classes
+
+      if (numClasses != labels.length) {
+        print('⚠️ Class count mismatch: model has $numClasses, labels has ${labels.length}');
+      }
+
+      // Choose normalization strategy:
+      // - useSoftmax = true: treat classes as mutually exclusive (softmax -> sum to 1)
+      // - useSoftmax = false: treat classes as independent (sigmoid per class -> multi-label)
+      const bool useSoftmax = true;
+
+      int belowThreshold = 0;
+
+      // Iterate through each prediction (column)
+      for (int i = 0; i < numPredictions; i++) {
+        // Read features for prediction i (column i across all rows)
+        final cx = ((features[0] as List)[i] as num).toDouble();
+        final cy = ((features[1] as List)[i] as num).toDouble();
+        final w = ((features[2] as List)[i] as num).toDouble();
+        final h = ((features[3] as List)[i] as num).toDouble();
+
+        // Collect raw logits for all classes
+        final List<double> raw = List<double>.generate(numClasses, (c) {
+          return ((features[4 + c] as List)[i] as num).toDouble();
+        });
+
+        // Convert logits -> probabilities
+        List<double> probs;
+        if (useSoftmax) {
+          // Stable softmax
+          final double maxLogit = raw.reduce(math.max);
+          final exps = raw.map((r) => math.exp(r - maxLogit)).toList();
+          final double sumExp = exps.reduce((a, b) => a + b);
+          probs = exps.map((e) => e / sumExp).toList();
+        } else {
+          // Sigmoid per-class (for multi-label)
+          probs = raw.map((r) => _sigmoid(r)).toList();
+        }
+
+        // Find best class and its probability
+        double maxScore = -1.0;
         int maxIndex = 0;
-        
-        for (int i = 5; i < detection.length; i++) {
-          final score = detection[i] as double;
-          if (score > maxScore) {
-            maxScore = score;
-            maxIndex = i - 5;
+        for (int c = 0; c < probs.length; c++) {
+          if (probs[c] > maxScore) {
+            maxScore = probs[c];
+            maxIndex = c;
           }
         }
-        
-        // Calculate confidence
-        final confidence = objectness * maxScore;
-        if (confidence < confidenceThreshold) continue;
-        
-        // Get label
+
+        final confidence = maxScore;
+
+        // Debug first 3 predictions
+        if (i < 3) {
+          print('  Pred $i: cx=${cx.toStringAsFixed(3)}, cy=${cy.toStringAsFixed(3)}, w=${w.toStringAsFixed(3)}, h=${h.toStringAsFixed(3)}, conf=${confidence.toStringAsFixed(3)}, class=$maxIndex');
+          print('  raw logits: $raw');
+          print('  probs: $probs');
+        }
+
+        if (confidence < confidenceThreshold) {
+          belowThreshold++;
+          continue;
+        }
+
         final label = maxIndex < labels.length ? labels[maxIndex] : 'Unknown';
-        
-        // Convert to corner format [x, y, width, height] normalized
+
         detections.add({
           'label': label,
           'confidence': confidence,
@@ -67,17 +121,20 @@ class HomeRepairDetector {
           ],
         });
       }
-      
+
+      print('📊 Processed $numPredictions predictions, $belowThreshold below threshold, ${detections.length} passed');
+
       // Sort by confidence and limit
-      detections.sort((a, b) => 
-        (b['confidence'] as double).compareTo(a['confidence'] as double));
-      
-      return detections.length > maxDetections 
-          ? detections.sublist(0, maxDetections) 
+      detections.sort((a, b) =>
+          (b['confidence'] as double).compareTo(a['confidence'] as double));
+      print('length after sorting: ${detections.length}');
+
+      return detections.length > maxDetections
+          ? detections.sublist(0, maxDetections)
           : detections;
-          
-    } catch (e) {
-      print('Detection processing error: $e');
+    } catch (e, stackTrace) {
+      print('❌ Detection processing error: $e');
+      print('Stack trace: $stackTrace');
       return [];
     }
   }

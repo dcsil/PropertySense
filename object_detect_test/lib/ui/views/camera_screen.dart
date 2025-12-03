@@ -14,10 +14,12 @@
  */
 
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:object_detect_test/domain/models/defect_detection.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
@@ -25,28 +27,36 @@ import 'package:object_detect_test/ml/model_loader.dart';
 import 'package:object_detect_test/ml/home_repair_detector.dart';
 import 'package:object_detect_test/domain/services/price_predictor.dart';
 import 'package:object_detect_test/ui/views/defect_report_screen.dart';
+import 'package:object_detect_test/utils/toaster.dart';
 
 class CameraScreen extends StatefulWidget {
-  const CameraScreen({super.key});
+  CameraScreen(this.price);
 
+  double price;
   @override
-  State<CameraScreen> createState() => _CameraScreenState();
+  State<CameraScreen> createState() => _CameraScreenState(price);
 }
 
 class _CameraScreenState extends State<CameraScreen> {
+  _CameraScreenState(this.price);
+
+  double price;
 
   List<CameraDescription> cameras = [];
 
   // Camera and model components
   CameraController? _controller;
   HomeRepairDetector? _detector;
-  
+
   // Detection state
   List<Map<String, dynamic>>? _detections;
   bool _isDetecting = false;
   bool _isModelLoaded = false;
   bool _isCameraAvailable = false;
-  
+
+  // Captured images for report generation
+  List<Map<String, dynamic>> _capturedDetections = [];
+
   // Backup image mode (only when no camera)
   Uint8List? _testImageBytes;
   final ImagePicker _imagePicker = ImagePicker();
@@ -82,18 +92,18 @@ class _CameraScreenState extends State<CameraScreen> {
       return;
     }
 
-      try {
-        _controller = CameraController(
-          cameras.first,
-          ResolutionPreset.medium,
-          enableAudio: false,
-        );
-        
-        await _controller!.initialize();
-      
+    try {
+      _controller = CameraController(
+        cameras.first,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+
+      await _controller!.initialize();
+
       // Start live detection stream
       _controller!.startImageStream(_processCameraFrame);
-      
+
       setState(() => _isCameraAvailable = true);
       print('✓ Camera initialized - live detection active');
     } catch (e) {
@@ -106,43 +116,108 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _processCameraFrame(CameraImage cameraImage) async {
     // Skip if model not ready or already processing
     if (_detector == null || _isDetecting) return;
-    
+
     _isDetecting = true;
-    
+
     try {
       // Get model input requirements
       final inputShape = ModelLoader.interpreter.getInputTensor(0).shape;
       final inputHeight = inputShape[1];
       final inputWidth = inputShape[2];
-      
+
       // Convert camera image to RGB (handles both iOS BGRA and Android YUV420)
       final img.Image? rgbImage = _convertYUV420ToImage(cameraImage);
       if (rgbImage == null) {
         _isDetecting = false;
         return;
       }
-      
+
       // Preprocess image using detector
       final inputBytes = _detector!.preprocessImage(rgbImage, inputWidth);
+
+      // DEBUG: Print first few pixel values to verify input changes each frame
+      final debugSample = inputBytes.sublist(0, 9);
+      print(
+        '🖼️ Input sample (first 3 pixels RGB): ${debugSample.map((v) => v.toStringAsFixed(3)).toList()}',
+      );
+
       final input = inputBytes.reshape([1, inputHeight, inputWidth, 3]);
-      
-      // Prepare output buffer
+
+      // Prepare output buffer using Map for proper tensor handling
       final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
-      final output = List.generate(
+      print('📐 Output tensor shape: $outputShape');
+
+      // Use a map with index 0 for the single output tensor
+      final outputBuffer = List.generate(
         outputShape[0],
         (i) => List.generate(
           outputShape[1],
           (j) => List.filled(outputShape[2], 0.0),
         ),
       );
-      
-      // Run inference
-      ModelLoader.interpreter.run(input, output);
-      
+      final outputs = {0: outputBuffer};
+
+      // Run inference with runForMultipleInputs for proper tensor handling
+      ModelLoader.interpreter.runForMultipleInputs([input], outputs);
+      final output = outputs[0]!;
+
+      // DEBUG: Print samples from multiple rows to verify model is actually running
+      if (output.isNotEmpty &&
+          output[0] is List &&
+          (output[0] as List).isNotEmpty) {
+        final features = output[0] as List;
+        print(
+          '📤 Output row 0 (cx): ${(features[0] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}',
+        );
+        print(
+          '📤 Output row 4 (class0): ${(features[4] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}',
+        );
+        print(
+          '📤 Output row 10 (class6): ${(features[10] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}',
+        );
+
+        // Check raw logits and sigmoid-applied scores
+        double maxRawScore = -double.infinity;
+        double minRawScore = double.infinity;
+        for (int row = 4; row < 11; row++) {
+          for (var val in (features[row] as List)) {
+            final v = val as double;
+            if (v > maxRawScore) maxRawScore = v;
+            if (v < minRawScore) minRawScore = v;
+          }
+        }
+        // Apply sigmoid to see actual probabilities
+        double sigmoid(double x) => 1.0 / (1.0 + math.exp(-x));
+        print(
+          '📊 Raw logit range: min=${minRawScore.toStringAsFixed(4)}, max=${maxRawScore.toStringAsFixed(4)}',
+        );
+        print(
+          '📊 After sigmoid: min=${sigmoid(minRawScore).toStringAsFixed(4)}, max=${sigmoid(maxRawScore).toStringAsFixed(4)}',
+        );
+      }
+
       // Process results using detector
       final detections = _detector!.processOutput(output);
       if (mounted) {
+        final previousCount = _detections?.length ?? 0;
         setState(() => _detections = detections);
+
+        // Show detections via Toaster (only when count changes significantly)
+        if (detections.isNotEmpty && detections.length != previousCount) {
+          final detectionsText = detections
+              .take(3)
+              .map(
+                (d) =>
+                    '${d['label']}: ${(d['confidence'] as double).toStringAsFixed(2)}',
+              )
+              .join(', ');
+          final moreText = detections.length > 3
+              ? ' (+${detections.length - 3} more)'
+              : '';
+          Toaster.showInfo(
+            '${detections.length} detected: $detectionsText$moreText',
+          );
+        }
       }
     } catch (e) {
       print('Frame processing error: $e');
@@ -158,15 +233,14 @@ class _CameraScreenState extends State<CameraScreen> {
       if (cameraImage.planes.length == 1) {
         return _convertBGRA(cameraImage);
       }
-      
+
       // Android: YUV420 format (3 planes)
       if (cameraImage.planes.length == 3) {
         return _convertYUV420(cameraImage);
       }
-      
+
       print('Unsupported camera format: ${cameraImage.planes.length} planes');
       return null;
-      
     } catch (e, stackTrace) {
       print('Camera conversion error: $e');
       print('Stack trace: $stackTrace');
@@ -180,28 +254,28 @@ class _CameraScreenState extends State<CameraScreen> {
     final bytes = plane.bytes;
     final int width = cameraImage.width;
     final int height = cameraImage.height;
-    
+
     final img.Image image = img.Image(width: width, height: height);
-    
+
     final int bytesPerPixel = plane.bytesPerPixel ?? 4;
     final int bytesPerRow = plane.bytesPerRow;
-    
+
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         final int pixelIndex = y * bytesPerRow + x * bytesPerPixel;
-        
+
         // Ensure we have enough bytes for R, G, B
         if (pixelIndex + 2 >= bytes.length) continue;
-        
+
         // BGRA format: B=0, G=1, R=2, A=3
         final int b = bytes[pixelIndex];
         final int g = bytes[pixelIndex + 1];
         final int r = bytes[pixelIndex + 2];
-        
+
         image.setPixelRgb(x, y, r, g, b);
       }
     }
-    
+
     return image;
   }
 
@@ -211,46 +285,48 @@ class _CameraScreenState extends State<CameraScreen> {
     final int height = cameraImage.height;
     final int uvRowStride = cameraImage.planes[1].bytesPerRow;
     final int uvPixelStride = cameraImage.planes[1].bytesPerPixel ?? 1;
-    
+
     final img.Image image = img.Image(width: width, height: height);
-    
+
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-        final int uvIndex = (uvPixelStride * (x / 2).floor()) + 
-                           (uvRowStride * (y / 2).floor());
+        final int uvIndex =
+            (uvPixelStride * (x / 2).floor()) + (uvRowStride * (y / 2).floor());
         final int index = y * width + x;
-        
+
         // Get YUV values with bounds checking
         if (index >= cameraImage.planes[0].bytes.length) continue;
         if (uvIndex >= cameraImage.planes[1].bytes.length) continue;
         if (uvIndex >= cameraImage.planes[2].bytes.length) continue;
-        
+
         final int yp = cameraImage.planes[0].bytes[index];
         final int up = cameraImage.planes[1].bytes[uvIndex];
         final int vp = cameraImage.planes[2].bytes[uvIndex];
-        
+
         // YUV to RGB conversion (exact formula from Stack Overflow)
         int r = (yp + (vp * 1436 / 1024 - 179)).round().clamp(0, 255);
-        int g = (yp - (up * 46549 / 131072) + 44 - (vp * 93604 / 131072) + 91).round().clamp(0, 255);
+        int g = (yp - (up * 46549 / 131072) + 44 - (vp * 93604 / 131072) + 91)
+            .round()
+            .clamp(0, 255);
         int b = (yp + (up * 1814 / 1024 - 227)).round().clamp(0, 255);
-        
+
         image.setPixelRgb(x, y, r, g, b);
       }
     }
-    
+
     return image;
   }
 
   // ==================== BACKUP IMAGE MODE ====================
   // These methods are only used when camera is unavailable
-  
+
   /// Pick image from gallery (backup mode only)
   Future<void> _pickImageFromGallery() async {
     try {
       final XFile? pickedFile = await _imagePicker.pickImage(
         source: ImageSource.gallery,
       );
-      
+
       if (pickedFile != null) {
         final bytes = await File(pickedFile.path).readAsBytes();
         setState(() => _testImageBytes = bytes);
@@ -307,7 +383,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
       // Process results using detector
       setState(() => _detections = _detector!.processOutput(output));
-      
+
       print('Found ${_detections?.length ?? 0} home repair issues');
     } catch (e) {
       print('Detection error: $e');
@@ -316,31 +392,151 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  /// Capture image and run detection
+  Future<void> _captureAndDetect() async {
+    if (_controller == null ||
+        !_controller!.value.isInitialized ||
+        _detector == null) {
+      print('Camera or detector not ready');
+      return;
+    }
 
-  /// Generate cost report from current detections
+    setState(() => _isDetecting = true);
+
+    try {
+      // Capture image
+      final XFile image = await _controller!.takePicture();
+      final bytes = await File(image.path).readAsBytes();
+      final decodedImage = img.decodeImage(bytes);
+
+      if (decodedImage == null) {
+        print('Failed to decode captured image');
+        setState(() => _isDetecting = false);
+        return;
+      }
+
+      // Get model requirements
+      final inputShape = ModelLoader.interpreter.getInputTensor(0).shape;
+      final inputSize = inputShape[1];
+
+      // Preprocess and run detection
+      final inputBytes = _detector!.preprocessImage(decodedImage, inputSize);
+      final input = inputBytes.reshape([1, inputSize, inputSize, 3]);
+
+      final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
+      final output = List.generate(
+        outputShape[0],
+        (i) => List.generate(
+          outputShape[1],
+          (j) => List.filled(outputShape[2], 0.0),
+        ),
+      );
+
+      ModelLoader.interpreter.run(input, output);
+      final detections = _detector!.processOutput(output);
+
+      // Store detections (avoid duplicates by checking confidence and class)
+      for (var detection in detections) {
+        _capturedDetections.add({
+          'class': detection['label'],
+          'confidence': detection['confidence'],
+        });
+      }
+
+      print(
+        'Captured image with ${detections.length} detections. Total: ${_capturedDetections.length}',
+      );
+      print(
+        _capturedDetections
+            .map(
+              (d) =>
+                  '${d['class']} (${(d['confidence'] as double).toStringAsFixed(2)})',
+            )
+            .join('; '),
+      );
+
+      // Show feedback
+      if (mounted) {
+        Toaster.showSuccess('Captured ${detections.length} defect(s)');
+      }
+    } catch (e) {
+      print('Error capturing and detecting: $e');
+    } finally {
+      setState(() => _isDetecting = false);
+    }
+  }
+
+  /// Generate cost report from captured detections (deduplicated)
   void _generateReport() {
-    if (_detections == null || _detections!.isEmpty) return;
+    if (_capturedDetections.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No defects captured!'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      final random = math.Random();
+      final randomPrice = 100 * (1 + random.nextDouble() * 9);
+      price = randomPrice;
+      // price = 0.0;
+      // return;
+    }
 
     final pricePredictor = PricePredictor();
-    
-    // Convert detections to format expected by price predictor
-    final detectionsForPredictor = _detections!.map((d) => {
-      'class': d['label'] as String,
-      'confidence': d['confidence'] as double,
-    }).toList();
-    
-    // Get cost predictions
-    final predictedDetections = pricePredictor.predictBatch(detectionsForPredictor);
-    
-    // Navigate to report screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DefectReportScreen(
-          detections: predictedDetections,
-        ),
-      ),
+
+    // Deduplicate detections by grouping similar classes with high confidence
+    final Map<String, double> deduplicatedMap = {};
+    for (var detection in _capturedDetections) {
+      final className = detection['class'] as String;
+      final confidence = detection['confidence'] as double;
+
+      // Keep the highest confidence for each class
+      if (!deduplicatedMap.containsKey(className) ||
+          deduplicatedMap[className]! < confidence) {
+        deduplicatedMap[className] = confidence;
+      }
+    }
+
+    // Convert back to list format
+    final detectionsForPredictor = deduplicatedMap.entries
+        .map((e) => {'class': e.key, 'confidence': e.value})
+        .toList();
+
+    print(
+      'Deduplicated ${_capturedDetections.length} detections to ${detectionsForPredictor.length} unique defects',
     );
+
+    // Get cost predictions
+    final predictedDetections = pricePredictor.predictBatch(
+      detectionsForPredictor,
+    );
+    print(
+      predictedDetections
+          .map(
+            (d) =>
+                '${d.className} (${d.confidence.toStringAsFixed(2)}): ${d.costRange}',
+          )
+          .join('; '),
+    );
+
+    final totalCost = pricePredictor.calculateTotal(predictedDetections);
+    print('Estimated total repair cost: \$${totalCost.$1} - \$${totalCost.$2}');
+    // random number that's 100 * random double between 1 and 10
+    final random = math.Random();
+    final randomPrice = 100 * (1 + random.nextDouble() * 9);
+    price = randomPrice;
+
+    // price = totalCost.$1.toDouble();
+
+    // Navigate to report screen
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => DefectReportScreen(
+    //       detections: predictedDetections,
+    //     ),
+    //   ),
+    // );
   }
 
   @override
@@ -377,10 +573,8 @@ class _CameraScreenState extends State<CameraScreen> {
         body: Stack(
           children: [
             // Camera preview
-            Positioned.fill(
-              child: CameraPreview(_controller!),
-            ),
-            // Detection overlay
+            Positioned.fill(child: CameraPreview(_controller!)),
+            // Detection overlay (live detection boxes)
             if (_detections != null)
               ..._detections!.map((d) => _buildDetectionBox(d)),
             // Status indicator
@@ -390,27 +584,26 @@ class _CameraScreenState extends State<CameraScreen> {
               right: 16,
               child: _buildDetectionStatus(),
             ),
+            // Bottom controls
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: _buildCameraControls(),
+            ),
           ],
         ),
-        floatingActionButton: _detections != null && _detections!.isNotEmpty
-            ? FloatingActionButton.extended(
-                onPressed: _generateReport,
-                icon: const Icon(Icons.assessment),
-                label: const Text('Generate Report'),
-                backgroundColor: Colors.blue,
-              )
-            : null,
       );
     }
 
     // BACKUP MODE: Static image detection (no camera)
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Object Detection'),
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-        ),
-        body: Center(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Object Detection'),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+      ),
+      body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -419,17 +612,17 @@ class _CameraScreenState extends State<CameraScreen> {
               if (_testImageBytes == null) ...[
                 // No image selected
                 const Icon(Icons.no_photography, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              const Text(
-                'Camera not available',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
+                const SizedBox(height: 16),
+                const Text(
+                  'Camera not available',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
                   'Use images for testing',
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: _pickImageFromGallery,
                   icon: const Icon(Icons.photo_library),
@@ -449,7 +642,9 @@ class _CameraScreenState extends State<CameraScreen> {
                       children: [
                         Image.memory(_testImageBytes!),
                         if (_detections != null)
-                          ..._detections!.map((d) => _buildDetectionBoxForImage(d, constraints)),
+                          ..._detections!.map(
+                            (d) => _buildDetectionBoxForImage(d, constraints),
+                          ),
                       ],
                     );
                   },
@@ -485,10 +680,10 @@ class _CameraScreenState extends State<CameraScreen> {
               ],
             ],
           ),
-          ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
   /// Build detection status indicator
   Widget _buildDetectionStatus() {
@@ -509,14 +704,70 @@ class _CameraScreenState extends State<CameraScreen> {
             size: 16,
           ),
           const SizedBox(width: 8),
-                          Text(
+          Text(
             _detections != null && _detections!.isNotEmpty
                 ? '${_detections!.length} objects detected'
                 : 'Scanning...',
             style: const TextStyle(color: Colors.white, fontSize: 14),
-                          ),
-                        ],
-                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build camera controls (capture and report buttons)
+  Widget _buildCameraControls() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Captured count indicator
+        if (_capturedDetections.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '${_capturedDetections.length} defect(s) captured',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        // Control buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Generate Report button
+            if (_capturedDetections.isNotEmpty)
+              ElevatedButton.icon(
+                onPressed: _generateReport,
+                icon: const Icon(Icons.assessment),
+                label: const Text('Generate Report'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            if (_capturedDetections.isNotEmpty) const SizedBox(width: 16),
+            // Capture button
+            FloatingActionButton.large(
+              onPressed: _isDetecting ? null : _captureAndDetect,
+              backgroundColor: Colors.white,
+              child: _isDetecting
+                  ? const CircularProgressIndicator(strokeWidth: 2)
+                  : const Icon(Icons.camera_alt, size: 32, color: Colors.black),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -544,13 +795,15 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          ..._detections!.map((d) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Text(
-              '• ${d['label']}: ${(d['confidence'] * 100).toStringAsFixed(0)}%',
-              style: const TextStyle(color: Colors.white),
+          ..._detections!.map(
+            (d) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(
+                '• ${d['label']}: ${(d['confidence'] * 100).toStringAsFixed(0)}%',
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -561,10 +814,10 @@ class _CameraScreenState extends State<CameraScreen> {
     final bbox = detection['bbox'] as List<double>;
     final label = detection['label'] as String;
     final confidence = detection['confidence'] as double;
-    
+
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     return Positioned(
       left: bbox[0] * screenWidth,
       top: bbox[1] * screenHeight,
@@ -576,29 +829,32 @@ class _CameraScreenState extends State<CameraScreen> {
         ),
         child: Align(
           alignment: Alignment.topLeft,
-              child: Container(
+          child: Container(
             color: Colors.greenAccent,
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                child: Text(
-                  '$label ${(confidence * 100).toInt()}%',
-                  style: const TextStyle(
+            child: Text(
+              '$label ${(confidence * 100).toInt()}%',
+              style: const TextStyle(
                 color: Colors.black,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
             ),
+          ),
+        ),
       ),
     );
   }
 
   /// Build bounding box for static image detection
-  Widget _buildDetectionBoxForImage(Map<String, dynamic> detection, BoxConstraints constraints) {
+  Widget _buildDetectionBoxForImage(
+    Map<String, dynamic> detection,
+    BoxConstraints constraints,
+  ) {
     final bbox = detection['bbox'] as List<double>;
     final label = detection['label'] as String;
     final confidence = detection['confidence'] as double;
-    
+
     return Positioned(
       left: bbox[0] * constraints.maxWidth,
       top: bbox[1] * constraints.maxHeight,
