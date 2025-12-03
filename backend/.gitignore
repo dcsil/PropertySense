@@ -1,4 +1,5 @@
 data/
+data_cls/
 venv/
 labelless_data/
 .DS_Store

@@ -31,6 +31,11 @@ class ListingOverviewScreenContent extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          onPressed: () => context.go('/homeowner'),
+          tooltip: 'Go Home',
+        ),
         title: const Text('All listings'),
         actions: [
           IconButton(

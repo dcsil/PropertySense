@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../domain/models/defect_detection.dart';
 import '../../domain/services/price_predictor.dart';
 
@@ -22,7 +23,7 @@ class DefectReportScreen extends StatelessWidget {
         backgroundColor: Colors.blue,
       ),
       body: detections.isEmpty
-          ? _buildNoDefectsView()
+          ? _buildNoDefectsView(context)
           : Column(
               children: [
                 // Total cost summary
@@ -72,12 +73,14 @@ class DefectReportScreen extends StatelessWidget {
                     },
                   ),
                 ),
+                // Bottom actions
+                _buildBottomActions(context),
               ],
             ),
     );
   }
 
-  Widget _buildNoDefectsView() {
+  Widget _buildNoDefectsView(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -93,7 +96,73 @@ class DefectReportScreen extends StatelessWidget {
             'Property appears to be in good condition',
             style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
           ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () => context.go('/homeowner'),
+            icon: const Icon(Icons.home),
+            label: const Text('Back to Home'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 16,
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildBottomActions(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            // Back to Home button
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => context.go('/homeowner'),
+                icon: const Icon(Icons.home),
+                label: const Text('Back to Home'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: const BorderSide(color: Colors.blue, width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Create Listing button
+            Expanded(
+              flex: 2,
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/create-listing'),
+                icon: const Icon(Icons.add_circle_outline),
+                label: const Text('Create Listing'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

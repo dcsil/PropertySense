@@ -7,7 +7,7 @@ class ModelLoader {
   static List<String>? _labels;
   static String? _loadedModelPath;
   
-  static Future<void> loadModel({String modelPath = 'assets/models/trained_model.tflite'}) async {
+  static Future<void> loadModel({String modelPath = 'assets/models/classifier_model.tflite'}) async {
     try {
       print('🔄 Loading model from: $modelPath');
       
@@ -40,6 +40,14 @@ class ModelLoader {
     }
   }
   
+  /// Check if model is a classification model (2D output) vs detection (3D output)
+  static bool get isClassificationModel {
+    if (_interpreter == null) return false;
+    final outputShape = _interpreter!.getOutputTensor(0).shape;
+    // Classification: [1, numClasses], Detection: [1, features, predictions]
+    return outputShape.length == 2;
+  }
+  
   /// Run a quick validation inference on the loaded model
   static Future<void> _validateModel() async {
     if (_interpreter == null) return;
@@ -58,46 +66,82 @@ class ModelLoader {
       
       final input = dummyInput.reshape(inputShape);
       
-      // Create output buffer
-      final output = List.generate(
-        outputShape[0],
-        (i) => List.generate(
-          outputShape[1],
-          (j) => List.filled(outputShape[2], 0.0),
-        ),
-      );
-      final outputs = {0: output};
+      // Create output buffer based on output shape dimensions
+      dynamic output;
+      if (outputShape.length == 2) {
+        // Classification model: [1, numClasses]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.filled(outputShape[1], 0.0),
+        );
+      } else if (outputShape.length == 3) {
+        // Detection model: [1, features, predictions]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.generate(
+            outputShape[1],
+            (j) => List.filled(outputShape[2], 0.0),
+          ),
+        );
+      } else {
+        print('⚠️ Unexpected output shape: $outputShape');
+        return;
+      }
+      
+      final Map<int, Object> outputs = {0: output};
       
       // Run inference
       _interpreter!.runForMultipleInputs([input], outputs);
 
-      // Output is shaped [1, 11, 2100] → [batch, features, predictions]
-      // We expect a 3D List structure: List<List<List<double>>>
-      final result = outputs[0] as List<List<List<double>>>;
-      final features = result[0]; // [11, 2100]
-      
-      // Check class scores (rows 4-10)
-      double maxClassScore = double.negativeInfinity;
-      double minClassScore = double.infinity;
-      
-      for (int row = 4; row < 11 && row < features.length; row++) {
-        final classRow = features[row];
-        for (final val in classRow) {
-          if (val > maxClassScore) maxClassScore = val;
-          if (val < minClassScore) minClassScore = val;
-        }
-      }
-      
-      // Use raw class scores directly (no sigmoid - fixed model outputs [0,1] range)
       print('🧪 Model Validation:');
-      print('   Class scores: min=${minClassScore.toStringAsFixed(4)}, max=${maxClassScore.toStringAsFixed(4)}');
       
-      if (maxClassScore > 0.5) {
-        print('   ✅ Model outputs meaningful predictions');
-      } else if (maxClassScore > 0.1) {
-        print('   ⚠️ Model outputs weak predictions (may need retraining)');
+      if (outputShape.length == 2) {
+        // Classification model: [1, numClasses]
+        final result = outputs[0] as List<List<double>>;
+        final classScores = result[0];
+        
+        double maxScore = double.negativeInfinity;
+        double minScore = double.infinity;
+        int maxIndex = 0;
+        
+        for (int i = 0; i < classScores.length; i++) {
+          if (classScores[i] > maxScore) {
+            maxScore = classScores[i];
+            maxIndex = i;
+          }
+          if (classScores[i] < minScore) minScore = classScores[i];
+        }
+        
+        print('   📊 Classification model detected');
+        print('   Class logits: min=${minScore.toStringAsFixed(4)}, max=${maxScore.toStringAsFixed(4)}');
+        print('   Predicted class: $maxIndex');
+        print('   ✅ Model outputs valid logits');
       } else {
-        print('   ❌ Model outputs near-zero predictions (export may be broken)');
+        // Detection model: [1, features, predictions]
+        final result = outputs[0] as List<List<List<double>>>;
+        final features = result[0];
+        
+        double maxClassScore = double.negativeInfinity;
+        double minClassScore = double.infinity;
+        
+        for (int row = 4; row < features.length; row++) {
+          final classRow = features[row];
+          for (final val in classRow) {
+            if (val > maxClassScore) maxClassScore = val;
+            if (val < minClassScore) minClassScore = val;
+          }
+        }
+        
+        print('   🎯 Detection model detected');
+        print('   Class scores: min=${minClassScore.toStringAsFixed(4)}, max=${maxClassScore.toStringAsFixed(4)}');
+        
+        if (maxClassScore > 0.5) {
+          print('   ✅ Model outputs meaningful predictions');
+        } else if (maxClassScore > 0.1) {
+          print('   ⚠️ Model outputs weak predictions (may need retraining)');
+        } else {
+          print('   ❌ Model outputs near-zero predictions (export may be broken)');
+        }
       }
     } catch (e) {
       print('⚠️ Model validation failed: $e');

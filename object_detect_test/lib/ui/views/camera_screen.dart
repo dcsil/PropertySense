@@ -26,7 +26,6 @@ import 'package:object_detect_test/ml/model_loader.dart';
 import 'package:object_detect_test/ml/home_repair_detector.dart';
 import 'package:object_detect_test/domain/services/price_predictor.dart';
 import 'package:object_detect_test/ui/views/defect_report_screen.dart';
-import 'package:object_detect_test/utils/toaster.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -70,9 +69,10 @@ class _CameraScreenState extends State<CameraScreen> {
       _detector = HomeRepairDetector(
         interpreter: ModelLoader.interpreter,
         labels: ModelLoader.labels,
+        isClassificationModel: ModelLoader.isClassificationModel,
       );
       setState(() => _isModelLoaded = true);
-      print('✓ Home repair detector ready');
+      print('✓ Home repair detector ready (${ModelLoader.isClassificationModel ? "classification" : "detection"} mode)');
     } catch (e) {
       print('✗ Error loading model: $e');
     }
@@ -136,27 +136,41 @@ class _CameraScreenState extends State<CameraScreen> {
       
       final input = inputBytes.reshape([1, inputHeight, inputWidth, 3]);
       
-      // Prepare output buffer using Map for proper tensor handling
+      // Prepare output buffer based on model type
       final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
       print('📐 Output tensor shape: $outputShape');
       
-      // Use a map with index 0 for the single output tensor
-      final outputBuffer = List.generate(
-        outputShape[0],
-        (i) => List.generate(
-          outputShape[1],
-          (j) => List.filled(outputShape[2], 0.0),
-        ),
-      );
-      final outputs = {0: outputBuffer};
+      // Create appropriate buffer for classification [1, N] or detection [1, F, P]
+      dynamic outputBuffer;
+      if (outputShape.length == 2) {
+        // Classification model: [1, numClasses]
+        outputBuffer = List.generate(
+          outputShape[0],
+          (i) => List.filled(outputShape[1], 0.0),
+        );
+      } else {
+        // Detection model: [1, features, predictions]
+        outputBuffer = List.generate(
+          outputShape[0],
+          (i) => List.generate(
+            outputShape[1],
+            (j) => List.filled(outputShape[2], 0.0),
+          ),
+        );
+      }
+      final Map<int, Object> outputs = {0: outputBuffer};
       
-      // Run inference with runForMultipleInputs for proper tensor handling
+      // Run inference
       ModelLoader.interpreter.runForMultipleInputs([input], outputs);
-      final output = outputs[0]!;
+      final outputData = outputs[0]! as List;
       
-      // DEBUG: Print samples from multiple rows to verify model is actually running
-      if (output.isNotEmpty && output[0] is List && (output[0] as List).isNotEmpty) {
-        final features = output[0] as List;
+      // DEBUG: Print output info based on model type
+      if (ModelLoader.isClassificationModel) {
+        // Classification model: output is [1, numClasses]
+        final classScores = (outputData)[0] as List;
+        print('📤 Class logits: ${classScores.map((v) => (v as double).toStringAsFixed(4)).toList()}');
+      } else if (outputData.isNotEmpty && outputData[0] is List && (outputData[0] as List).isNotEmpty) {
+        final features = outputData[0] as List;
         print('📤 Output row 0 (cx): ${(features[0] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}');
         print('📤 Output row 4 (class0): ${(features[4] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}');
         print('📤 Output row 10 (class6): ${(features[10] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}');
@@ -178,19 +192,9 @@ class _CameraScreenState extends State<CameraScreen> {
       }
       
       // Process results using detector
-      final detections = _detector!.processOutput(output);
+      final detections = _detector!.processOutput(outputData);
       if (mounted) {
-        final previousCount = _detections?.length ?? 0;
         setState(() => _detections = detections);
-        
-        // Show detections via Toaster (only when count changes significantly)
-        if (detections.isNotEmpty && detections.length != previousCount) {
-          final detectionsText = detections.take(3).map((d) => 
-            '${d['label']}: ${(d['confidence'] as double).toStringAsFixed(2)}'
-          ).join(', ');
-          final moreText = detections.length > 3 ? ' (+${detections.length - 3} more)' : '';
-          Toaster.showInfo('${detections.length} detected: $detectionsText$moreText');
-        }
       }
     } catch (e) {
       print('Frame processing error: $e');
@@ -340,15 +344,25 @@ class _CameraScreenState extends State<CameraScreen> {
       final inputBytes = _detector!.preprocessImage(image, inputSize);
       final input = inputBytes.reshape([1, inputSize, inputSize, 3]);
 
-      // Prepare output buffer
+      // Prepare output buffer based on model type
       final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
-      final output = List.generate(
-        outputShape[0],
-        (i) => List.generate(
-          outputShape[1],
-          (j) => List.filled(outputShape[2], 0.0),
-        ),
-      );
+      dynamic output;
+      if (outputShape.length == 2) {
+        // Classification model: [1, numClasses]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.filled(outputShape[1], 0.0),
+        );
+      } else {
+        // Detection model: [1, features, predictions]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.generate(
+            outputShape[1],
+            (j) => List.filled(outputShape[2], 0.0),
+          ),
+        );
+      }
 
       // Run inference
       ModelLoader.interpreter.run(input, output);
@@ -395,13 +409,23 @@ class _CameraScreenState extends State<CameraScreen> {
       final input = inputBytes.reshape([1, inputSize, inputSize, 3]);
 
       final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
-      final output = List.generate(
-        outputShape[0],
-        (i) => List.generate(
-          outputShape[1],
-          (j) => List.filled(outputShape[2], 0.0),
-        ),
-      );
+      dynamic output;
+      if (outputShape.length == 2) {
+        // Classification model: [1, numClasses]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.filled(outputShape[1], 0.0),
+        );
+      } else {
+        // Detection model: [1, features, predictions]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.generate(
+            outputShape[1],
+            (j) => List.filled(outputShape[2], 0.0),
+          ),
+        );
+      }
 
       ModelLoader.interpreter.run(input, output);
       final detections = _detector!.processOutput(output);
@@ -416,9 +440,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
       print('Captured image with ${detections.length} detections. Total: ${_capturedDetections.length}');
       
-      // Show feedback
+      // Update state to show in top bar
       if (mounted) {
-        Toaster.showSuccess('Captured ${detections.length} defect(s)');
+        setState(() {}); // Trigger rebuild to update top bar
       }
     } catch (e) {
       print('Error capturing and detecting: $e');
@@ -624,28 +648,58 @@ class _CameraScreenState extends State<CameraScreen> {
 
   /// Build detection status indicator
   Widget _buildDetectionStatus() {
+    // Build detection info text
+    String statusText = 'Scanning...';
+    IconData statusIcon = Icons.search;
+    
+    if (_detections != null && _detections!.isNotEmpty) {
+      statusIcon = Icons.check_circle;
+      final detectionsText = _detections!.take(3).map((d) => 
+        '${d['label']}: ${((d['confidence'] as double) * 100).toStringAsFixed(0)}%'
+      ).join(', ');
+      final moreText = _detections!.length > 3 ? ' (+${_detections!.length - 3} more)' : '';
+      statusText = '${_detections!.length} detected: $detectionsText$moreText';
+    }
+    
+    // Add captured defects info if any
+    String capturedText = '';
+    if (_capturedDetections.isNotEmpty) {
+      capturedText = ' | ${_capturedDetections.length} captured';
+    }
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.blue.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            _detections != null && _detections!.isNotEmpty
-                ? Icons.check_circle
-                : Icons.search,
+            statusIcon,
             color: Colors.white,
-            size: 16,
+            size: 18,
           ),
-          const SizedBox(width: 8),
-          Text(
-            _detections != null && _detections!.isNotEmpty
-                ? '${_detections!.length} objects detected'
-                : 'Scanning...',
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              '$statusText$capturedText',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -654,56 +708,33 @@ class _CameraScreenState extends State<CameraScreen> {
 
   /// Build camera controls (capture and report buttons)
   Widget _buildCameraControls() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Captured count indicator
+        // Generate Report button
         if (_capturedDetections.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '${_capturedDetections.length} defect(s) captured',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+          ElevatedButton.icon(
+            onPressed: _generateReport,
+            icon: const Icon(Icons.assessment),
+            label: const Text('Generate Report'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
               ),
             ),
           ),
-        // Control buttons
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Generate Report button
-            if (_capturedDetections.isNotEmpty)
-              ElevatedButton.icon(
-                onPressed: _generateReport,
-                icon: const Icon(Icons.assessment),
-                label: const Text('Generate Report'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                ),
-              ),
-            if (_capturedDetections.isNotEmpty)
-              const SizedBox(width: 16),
-            // Capture button
-            FloatingActionButton.large(
-              onPressed: _isDetecting ? null : _captureAndDetect,
-              backgroundColor: Colors.white,
-              child: _isDetecting
-                  ? const CircularProgressIndicator(strokeWidth: 2)
-                  : const Icon(Icons.camera_alt, size: 32, color: Colors.black),
-            ),
-          ],
+        if (_capturedDetections.isNotEmpty)
+          const SizedBox(width: 16),
+        // Capture button
+        FloatingActionButton.large(
+          onPressed: _isDetecting ? null : _captureAndDetect,
+          backgroundColor: Colors.white,
+          child: _isDetecting
+              ? const CircularProgressIndicator(strokeWidth: 2)
+              : const Icon(Icons.camera_alt, size: 32, color: Colors.black),
         ),
       ],
     );
