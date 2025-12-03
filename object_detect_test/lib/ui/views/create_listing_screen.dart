@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:object_detect_test/data/repos/repositories.dart';
-import 'package:object_detect_test/domain/models/defect_detection.dart';
 import 'package:object_detect_test/ui/viewmodels/create_listing_viewmodel.dart';
-import 'package:object_detect_test/ui/views/camera_screen.dart';
 import 'package:object_detect_test/ui/views/create_listing/select_job_type_step.dart';
 import 'package:object_detect_test/ui/views/create_listing/select_location_step.dart';
 import 'package:object_detect_test/ui/views/create_listing/upload_images_step.dart';
@@ -83,7 +81,7 @@ class CreateListingScreenContent extends StatelessWidget {
       case 1:
         return const SelectLocationStep();
       case 2:
-        return CameraScreen(viewModel.price);
+        return const UploadImagesStep();
       case 3:
         return const EditDetailsStep();
       case 4:

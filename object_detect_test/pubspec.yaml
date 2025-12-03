@@ -83,7 +83,7 @@ flutter:
 
   assets:
     - assets/models/1.tflite
-    - assets/models/trained_model.tflite
+    # - assets/models/trained_model.tflite
     - assets/models/labels.txt
     - assets/test_image.jpg
     - assets/flutter_logo.png
