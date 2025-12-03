@@ -25,11 +25,11 @@ class CreateListingViewModel extends ChangeNotifier {
   List<XFile> _images = [];
   String _title = '';
   String _description = '';
-  double? price;
+  double? _price;
   late Location location = _userRepository.currentUser != null
       ? _userRepository.currentUser!.location
       : Location(latitude: 0, longitude: 0, timestamp: DateTime.now());
-    
+
   // Getters
   int get currentStep => _currentStep;
   bool get isLoading => _isLoading;
@@ -38,6 +38,7 @@ class CreateListingViewModel extends ChangeNotifier {
   List<XFile> get images => _images;
   String get title => _title;
   String get description => _description;
+  double? get price => _price;
 
   bool get canProceed {
     switch (_currentStep) {
@@ -46,7 +47,7 @@ class CreateListingViewModel extends ChangeNotifier {
       case 1:
         return location.latitude != 0 && location.longitude != 0;
       case 2:
-        return true;
+        return _images.isNotEmpty;
       case 3:
         return _title.isNotEmpty && _description.isNotEmpty;
       case 4:
@@ -97,7 +98,7 @@ class CreateListingViewModel extends ChangeNotifier {
   }
 
   void setPrice(double? price) {
-    price = price;
+    _price = price;
     notifyListeners();
   }
 
@@ -130,9 +131,9 @@ class CreateListingViewModel extends ChangeNotifier {
     await Future.delayed(const Duration(seconds: 1));
 
     // Set dummy values
-    // _title = 'Roofing Repair Needed';
-    // _description = 'The roof has some visible damage and needs professional repair. Multiple shingles are missing and there appears to be water damage.';
-    // price = 150.0;
+    _title = 'Roofing Repair Needed';
+    _description = 'The roof has some visible damage and needs professional repair. Multiple shingles are missing and there appears to be water damage.';
+    _price = 150.0;
 
     _isLoading = false;
     notifyListeners();
@@ -149,7 +150,7 @@ class CreateListingViewModel extends ChangeNotifier {
   debugPrint('  listingType: $_listingType');
   debugPrint('  title: $_title');
   debugPrint('  description: $_description');
-  debugPrint('  price: $price');
+  debugPrint('  price: $_price');
   debugPrint('  images count: ${_images.length}');
   for (var i = 0; i < _images.length; i++) {
     final img = _images[i];
@@ -171,7 +172,7 @@ class CreateListingViewModel extends ChangeNotifier {
         author: _userId,
         title: _title,
         description: _description,
-        price: price ?? 0.0,
+        price: _price ?? 0.0,
         imageUrls: imageUrls,
         listingStatus: ListingStatus.draft,
         listingType: _listingType!,
