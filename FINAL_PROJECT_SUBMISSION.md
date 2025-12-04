@@ -214,8 +214,21 @@ The following packages are used for testing:
 
 
 # 5. Demo Recording and In Class Live Demo
+[Link to Demo Video](https://github.com/dcsil/PropertySense/blob/final-submission-doc/propertysense_demo.mp4)
+### App Testing Guide
+**Homeowner View**
+- Upload Photos: if camera detected (ie. on a phone), will default to live detection
+- Point camera at defect, when a green bounding box is shown, that means a defect has been detected, and can be captured
+- Generate Report after capturing defects
+- Report will include price estimate for each defect captured, and total
+- Create listing directly from this page doesn't fully work at the moment since it's identical to creating a listing by uploading images. Navigate to homeowner home view
+- In My Listings Tab, create job listing by following the instructions to input listing details. Accept offers made by contractors and mark jobs as complete in the same tab
 
-Carol Stuff
+**Contractor View**
+- Find jobs around your location using Map tab. Offer to take job, schedule date and make price adjustments before making offer
+- Find Job tab is where the jobs and their statuses are kept track of
+- Customize types of jobs to appear in job feed and map in the Profile (top right)
+
 
 # 6. Deployment Documentation
 This section provides all deployment instructions for running the application; the same steps are also included in the project’s [README.md](https://github.com/dcsil/PropertySense/blob/master/README.md) file.
