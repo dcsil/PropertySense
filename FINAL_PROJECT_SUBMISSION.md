@@ -2,6 +2,48 @@
 # 1. Product Overview
 # 2. MVP Development Justification
 # 3. Functional and Dynamic MVP
+The MVP we delivered is fully functional and demonstrates the core workflow of our product across all primary Customer Use Journeys (CUJs). The implementation focuses on enabling end-to-end interaction between homeowners and contractors, supported by AI-powered defect detection and a dynamic listing system. While several UI components operate with pre-seeded or placeholder data, all essential flows are dynamic and operational.
+## Dynamic Functionality (Core CUJs)
+### CUJ 1: AI Issue Detection and Preparation
+The MVP includes fully dynamic AI-driven image analysis features that allow homeowners to understand issues before posting a job:
+- Live defect detection from captured or uploaded photos.
+- Classification of defects with model confidence values.
+- Multiple-defect reporting, where several detected issues are compiled into a generated summary.
+- Ability to proceed directly from AI results into creating a repair listing.
+
+These elements reflect the first critical user journey: getting immediate clarity about a home issue.
+### CUJ 2: Listing Creation and Contractor Matching
+The platform dynamically supports the entire listing creation and matching workflow after AI diagnosis:
+- Dynamic listing creation (type, price, title, and description saved to Firestore).
+- Listings appear instantly in contractor interfaces with real-time updates.
+- earby listing discovery through:
+  - a swipe view for rapid browsing,
+  - a map view powered by live contractor geolocation,
+  - and a listing inbox for structured communication.
+- Offer submission from contractors directly on active listings.
+- Appointment creation when homeowners accept contractor offers.
+
+This enables the full contractor-matching CUJ to function end-to-end.
+
+### CUJ 3: Contractor Marketplace & Interaction
+The marketplace components that contractors rely on are fully dynamic and operational:
+- Filtering nearby listings by type and radius (via contractor profile settings).
+- Real-time listing updates, ensuring new offers, accepted offers, and appointments sync across both user roles.
+- Bid/offer management for both homeowners and contractors within their respective inbox views.
+- Cross-role communication flow, allowing both sides to progress through job acceptance and appointment confirmation.
+
+These interactive components demonstrate the core value of connecting homeowners and contractors through live, data-driven workflows.
+
+## Static Elements
+While the primary workflows are dynamic, several components within the MVP use placeholder data or limited logic. These include:
+- Contractor registration details, such as company name, ID, and verification status, are static and not currently sourced from a backend system.
+- Images are not yet attached to listings, and profile photos are static placeholders.
+- The “I don’t know” option during listing creation is non-functional and currently decorative.
+- Quick estimation buttons in the map view are static; users must enter listing details to submit offers.
+- Publishing a listing does not transition it to a private or controlled visibility stat, drafts are automatically treated as public.
+- Price estimation for defects, though supported conceptually, is not implemented in the current model output.
+
+These limitations do not affect the execution of core CUJs but represent areas slated for refinement in future iterations.
 # 4. Test Coverage
 ## Overview
 
