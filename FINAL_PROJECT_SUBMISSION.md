@@ -216,7 +216,7 @@ The following packages are used for testing:
 # 5. Demo Recording and In Class Live Demo
 # 6. Deployment Documentation
 # 7. Updated Architecture Diagram
-The following is our updated architecture diagram and explanation that can also be found at ![architecture/update_diagram.md](architecture/updated_diagram.md)
+The following is our updated architecture diagram and explanation that can also be found at [architecture/update_diagram.md](https://github.com/dcsil/PropertySense/blob/master/architecture/update_diagram.md)
 
 ## Diagram
 
