@@ -1,25 +1,44 @@
-name: Run Unit Tests
+name: Run Unit Tests and Coverage
 
 on:
   pull_request:
+  push:
+    branches: [ main ]
 
 jobs:
   test:
-    name: Unit Tests
+    name: Unit Tests + Coverage
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./object_detect_test
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'  # Specify Flutter channel
-          cache: true        # Enable caching for faster runs
-      
-      # - name: Install dependencies
-      #   run: flutter pub get
-      
-      - name: Run unit tests
-        run: flutter test
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Print coverage summary
+        run: |
+          sudo apt-get install -y lcov
+          lcov --summary coverage/lcov.info
+
+      - name: Generate HTML coverage report
+        run: |
+          sudo apt-get install -y lcov
+          genhtml coverage/lcov.info --output-directory coverage/html
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: object_detect_test/coverage/html

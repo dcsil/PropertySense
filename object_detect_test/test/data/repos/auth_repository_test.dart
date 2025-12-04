@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:object_detect_test/data/repos/auth/auth_repository_remote.dart';
@@ -239,5 +240,227 @@ void main() {
         );
       });
     });
+
+    group('signInWithEmail', () {
+      test('should return Success when sign in succeeds', () async {
+        // Arrange
+        when(mockFirebaseAuth.signInWithEmailAndPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        )).thenAnswer((_) async => MockUserCredential());
+
+        // Act
+        final result = await authRepository.signInWithEmail(
+          'test@example.com',
+          'password123',
+        );
+
+        // Assert
+        expect(result, isA<Success<void>>());
+        verify(mockFirebaseAuth.signInWithEmailAndPassword(
+          email: 'test@example.com',
+          password: 'password123',
+        )).called(1);
+      });
+
+      test('should return Failure when sign in fails', () async {
+        // Arrange
+        final exception = FirebaseAuthException(
+          code: 'user-not-found',
+          message: 'No user found',
+        );
+        when(mockFirebaseAuth.signInWithEmailAndPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        )).thenThrow(exception);
+
+        // Act
+        final result = await authRepository.signInWithEmail(
+          'test@example.com',
+          'wrongpassword',
+        );
+
+        // Assert
+        expect(result, isA<Failure>());
+        expect((result as Failure).message, contains('Failed to sign in with email and password'));
+        verify(mockFirebaseAuth.signInWithEmailAndPassword(
+          email: 'test@example.com',
+          password: 'wrongpassword',
+        )).called(1);
+      });
+    });
+
+    group('signInWithApple', () {
+      test('should return Failure as not implemented', () async {
+        // Act
+        final result = await authRepository.signInWithApple();
+
+        // Assert
+        expect(result, isA<Failure>());
+        expect((result as Failure).message, 'Sign in with Apple not implemented yet');
+      });
+    });
+
+    group('signOut', () {
+      test('should return Success when sign out succeeds', () async {
+        // Arrange
+        when(mockFirebaseAuth.signOut()).thenAnswer((_) async => Future.value());
+
+        // Act
+        final result = await authRepository.signOut();
+
+        // Assert
+        expect(result, isA<Success<void>>());
+        verify(mockFirebaseAuth.signOut()).called(1);
+      });
+
+      test('should return Failure when sign out fails', () async {
+        // Arrange
+        final exception = Exception('Sign out failed');
+        when(mockFirebaseAuth.signOut()).thenThrow(exception);
+
+        // Act
+        final result = await authRepository.signOut();
+
+        // Assert
+        expect(result, isA<Failure>());
+        expect((result as Failure).message, contains('Failed to sign out'));
+        verify(mockFirebaseAuth.signOut()).called(1);
+      });
+    });
+
+    group('signUpWithEmail', () {
+      test('should return Success when sign up succeeds', () async {
+        // Arrange
+        when(mockFirebaseAuth.createUserWithEmailAndPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        )).thenAnswer((_) async => MockUserCredential());
+
+        // Act
+        final result = await authRepository.signUpWithEmail(
+          'newuser@example.com',
+          'password123',
+        );
+
+        // Assert
+        expect(result, isA<Success<void>>());
+        verify(mockFirebaseAuth.createUserWithEmailAndPassword(
+          email: 'newuser@example.com',
+          password: 'password123',
+        )).called(1);
+      });
+
+      test('should return Failure when sign up fails', () async {
+        // Arrange
+        final exception = FirebaseAuthException(
+          code: 'email-already-in-use',
+          message: 'Email already in use',
+        );
+        when(mockFirebaseAuth.createUserWithEmailAndPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        )).thenThrow(exception);
+
+        // Act
+        final result = await authRepository.signUpWithEmail(
+          'existing@example.com',
+          'password123',
+        );
+
+        // Assert
+        expect(result, isA<Failure>());
+        expect((result as Failure).message, contains('Failed to sign up with email and password'));
+        verify(mockFirebaseAuth.createUserWithEmailAndPassword(
+          email: 'existing@example.com',
+          password: 'password123',
+        )).called(1);
+      });
+    });
+
+    group('sendPasswordResetEmail', () {
+      test('should return Success when password reset email is sent', () async {
+        // Arrange
+        when(mockFirebaseAuth.sendPasswordResetEmail(email: anyNamed('email')))
+            .thenAnswer((_) async => Future.value());
+
+        // Act
+        final result = await authRepository.sendPasswordResetEmail('user@example.com');
+
+        // Assert
+        expect(result, isA<Success<void>>());
+        verify(mockFirebaseAuth.sendPasswordResetEmail(email: 'user@example.com')).called(1);
+      });
+
+      test('should return Failure when password reset email fails', () async {
+        // Arrange
+        final exception = FirebaseAuthException(
+          code: 'user-not-found',
+          message: 'No user found',
+        );
+        when(mockFirebaseAuth.sendPasswordResetEmail(email: anyNamed('email')))
+            .thenThrow(exception);
+
+        // Act
+        final result = await authRepository.sendPasswordResetEmail('nonexistent@example.com');
+
+        // Assert
+        expect(result, isA<Failure>());
+        expect((result as Failure).message, contains('Failed to send password reset email'));
+        verify(mockFirebaseAuth.sendPasswordResetEmail(email: 'nonexistent@example.com')).called(1);
+      });
+    });
+
+    group('sendVerificationEmail', () {
+      late MockUser mockCurrentUser;
+
+      setUp(() {
+        mockCurrentUser = MockUser();
+      });
+
+      test('should return Success when verification email is sent', () async {
+        // Arrange
+        when(mockFirebaseAuth.currentUser).thenReturn(mockCurrentUser);
+        when(mockCurrentUser.sendEmailVerification())
+            .thenAnswer((_) async => Future.value());
+
+        // Act
+        final result = await authRepository.sendVerificationEmail();
+
+        // Assert
+        expect(result, isA<Success<void>>());
+        verify(mockCurrentUser.sendEmailVerification()).called(1);
+      });
+
+      test('should return Success when no current user (null)', () async {
+        // Arrange
+        when(mockFirebaseAuth.currentUser).thenReturn(null);
+
+        // Act
+        final result = await authRepository.sendVerificationEmail();
+
+        // Assert
+        expect(result, isA<Success<void>>());
+        verifyNever(mockCurrentUser.sendEmailVerification());
+      });
+
+      test('should return Failure when verification email fails', () async {
+        // Arrange
+        when(mockFirebaseAuth.currentUser).thenReturn(mockCurrentUser);
+        final exception = Exception('Failed to send email');
+        when(mockCurrentUser.sendEmailVerification()).thenThrow(exception);
+
+        // Act
+        final result = await authRepository.sendVerificationEmail();
+
+        // Assert
+        expect(result, isA<Failure>());
+        expect((result as Failure).message, contains('Failed to send verification email'));
+        verify(mockCurrentUser.sendEmailVerification()).called(1);
+      });
+    });
   });
 }
+
+// Helper mock class for UserCredential
+class MockUserCredential extends Mock implements UserCredential {}
