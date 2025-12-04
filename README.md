@@ -76,6 +76,14 @@ From [`user_model.dart`](https://github.com/dcsil/PropertySense/blob/1eb03bee4a0
 ### Utils
 In `/utils` we store helpers such as a Result type and Toaster which help display toasts in the UI.
 
+### Python Backend
+Separate from the Flutter app, we have the `/backend` directory, which contains Python code to fine tune and deploy YOLO models for use in the flutter app. 
+
+The data for fine tuning the YOLO model is the [Building Defects Detection Dataset](https://github.com/Praveenkottari/BD3-Dataset), which can be downloaded from the linked repo. We use the `augmented` folder inside the dataset, renamed to `data` and placed under `backend`. 
+
+The dataset is not required for model inference to run. It is only required for fine tuning and deploying a new YOLO model.
+
+
 # Deployment
 To deploy the app, just run the [Build and Distribute Workflow](https://github.com/dcsil/PropertySense/actions/workflows/firebase-ios-deploy.yaml).
 Seriously, that's it!
