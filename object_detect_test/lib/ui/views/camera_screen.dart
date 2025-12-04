@@ -14,6 +14,7 @@
  */
 
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +48,9 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _isModelLoaded = false;
   bool _isCameraAvailable = false;
   
+  // Captured images for report generation
+  List<Map<String, dynamic>> _capturedDetections = [];
+  
   // Backup image mode (only when no camera)
   Uint8List? _testImageBytes;
   final ImagePicker _imagePicker = ImagePicker();
@@ -65,9 +69,10 @@ class _CameraScreenState extends State<CameraScreen> {
       _detector = HomeRepairDetector(
         interpreter: ModelLoader.interpreter,
         labels: ModelLoader.labels,
+        isClassificationModel: ModelLoader.isClassificationModel,
       );
       setState(() => _isModelLoaded = true);
-      print('✓ Home repair detector ready');
+      print('✓ Home repair detector ready (${ModelLoader.isClassificationModel ? "classification" : "detection"} mode)');
     } catch (e) {
       print('✗ Error loading model: $e');
     }
@@ -124,23 +129,70 @@ class _CameraScreenState extends State<CameraScreen> {
       
       // Preprocess image using detector
       final inputBytes = _detector!.preprocessImage(rgbImage, inputWidth);
+      
+      // DEBUG: Print first few pixel values to verify input changes each frame
+      final debugSample = inputBytes.sublist(0, 9);
+      print('🖼️ Input sample (first 3 pixels RGB): ${debugSample.map((v) => v.toStringAsFixed(3)).toList()}');
+      
       final input = inputBytes.reshape([1, inputHeight, inputWidth, 3]);
       
-      // Prepare output buffer
+      // Prepare output buffer based on model type
       final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
-      final output = List.generate(
-        outputShape[0],
-        (i) => List.generate(
-          outputShape[1],
-          (j) => List.filled(outputShape[2], 0.0),
-        ),
-      );
+      print('📐 Output tensor shape: $outputShape');
+      
+      // Create appropriate buffer for classification [1, N] or detection [1, F, P]
+      dynamic outputBuffer;
+      if (outputShape.length == 2) {
+        // Classification model: [1, numClasses]
+        outputBuffer = List.generate(
+          outputShape[0],
+          (i) => List.filled(outputShape[1], 0.0),
+        );
+      } else {
+        // Detection model: [1, features, predictions]
+        outputBuffer = List.generate(
+          outputShape[0],
+          (i) => List.generate(
+            outputShape[1],
+            (j) => List.filled(outputShape[2], 0.0),
+          ),
+        );
+      }
+      final Map<int, Object> outputs = {0: outputBuffer};
       
       // Run inference
-      ModelLoader.interpreter.run(input, output);
+      ModelLoader.interpreter.runForMultipleInputs([input], outputs);
+      final outputData = outputs[0]! as List;
+      
+      // DEBUG: Print output info based on model type
+      if (ModelLoader.isClassificationModel) {
+        // Classification model: output is [1, numClasses]
+        final classScores = (outputData)[0] as List;
+        print('📤 Class logits: ${classScores.map((v) => (v as double).toStringAsFixed(4)).toList()}');
+      } else if (outputData.isNotEmpty && outputData[0] is List && (outputData[0] as List).isNotEmpty) {
+        final features = outputData[0] as List;
+        print('📤 Output row 0 (cx): ${(features[0] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}');
+        print('📤 Output row 4 (class0): ${(features[4] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}');
+        print('📤 Output row 10 (class6): ${(features[10] as List).take(5).map((v) => (v as double).toStringAsFixed(6)).toList()}');
+        
+        // Check raw logits and sigmoid-applied scores
+        double maxRawScore = -double.infinity;
+        double minRawScore = double.infinity;
+        for (int row = 4; row < 11; row++) {
+          for (var val in (features[row] as List)) {
+            final v = val as double;
+            if (v > maxRawScore) maxRawScore = v;
+            if (v < minRawScore) minRawScore = v;
+          }
+        }
+        // Apply sigmoid to see actual probabilities
+        double sigmoid(double x) => 1.0 / (1.0 + math.exp(-x));
+        print('📊 Raw logit range: min=${minRawScore.toStringAsFixed(4)}, max=${maxRawScore.toStringAsFixed(4)}');
+        print('📊 After sigmoid: min=${sigmoid(minRawScore).toStringAsFixed(4)}, max=${sigmoid(maxRawScore).toStringAsFixed(4)}');
+      }
       
       // Process results using detector
-      final detections = _detector!.processOutput(output);
+      final detections = _detector!.processOutput(outputData);
       if (mounted) {
         setState(() => _detections = detections);
       }
@@ -292,23 +344,42 @@ class _CameraScreenState extends State<CameraScreen> {
       final inputBytes = _detector!.preprocessImage(image, inputSize);
       final input = inputBytes.reshape([1, inputSize, inputSize, 3]);
 
-      // Prepare output buffer
+      // Prepare output buffer based on model type
       final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
-      final output = List.generate(
-        outputShape[0],
-        (i) => List.generate(
-          outputShape[1],
-          (j) => List.filled(outputShape[2], 0.0),
-        ),
-      );
+      dynamic output;
+      if (outputShape.length == 2) {
+        // Classification model: [1, numClasses]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.filled(outputShape[1], 0.0),
+        );
+      } else {
+        // Detection model: [1, features, predictions]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.generate(
+            outputShape[1],
+            (j) => List.filled(outputShape[2], 0.0),
+          ),
+        );
+      }
 
       // Run inference
       ModelLoader.interpreter.run(input, output);
 
       // Process results using detector
-      setState(() => _detections = _detector!.processOutput(output));
+      final detections = _detector!.processOutput(output);
+      setState(() => _detections = detections);
       
-      print('Found ${_detections?.length ?? 0} home repair issues');
+      print('📸 Upload image detection complete:');
+      print('   Found ${detections.length} home repair issues');
+      if (detections.isNotEmpty) {
+        for (var d in detections) {
+          print('   - ${d['label']}: ${((d['confidence'] as double) * 100).toStringAsFixed(1)}%');
+        }
+      } else {
+        print('   ⚠️ No defects detected above threshold');
+      }
     } catch (e) {
       print('Detection error: $e');
     } finally {
@@ -317,30 +388,163 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
 
-  /// Generate cost report from current detections
-  void _generateReport() {
-    if (_detections == null || _detections!.isEmpty) return;
+  /// Capture image and run detection
+  Future<void> _captureAndDetect() async {
+    if (_controller == null || !_controller!.value.isInitialized || _detector == null) {
+      print('Camera or detector not ready');
+      return;
+    }
 
-    final pricePredictor = PricePredictor();
+    setState(() => _isDetecting = true);
+
+    try {
+      // Capture image
+      final XFile image = await _controller!.takePicture();
+      final bytes = await File(image.path).readAsBytes();
+      final decodedImage = img.decodeImage(bytes);
+      
+      if (decodedImage == null) {
+        print('Failed to decode captured image');
+        setState(() => _isDetecting = false);
+        return;
+      }
+
+      // Get model requirements
+      final inputShape = ModelLoader.interpreter.getInputTensor(0).shape;
+      final inputSize = inputShape[1];
+
+      // Preprocess and run detection
+      final inputBytes = _detector!.preprocessImage(decodedImage, inputSize);
+      final input = inputBytes.reshape([1, inputSize, inputSize, 3]);
+
+      final outputShape = ModelLoader.interpreter.getOutputTensor(0).shape;
+      dynamic output;
+      if (outputShape.length == 2) {
+        // Classification model: [1, numClasses]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.filled(outputShape[1], 0.0),
+        );
+      } else {
+        // Detection model: [1, features, predictions]
+        output = List.generate(
+          outputShape[0],
+          (i) => List.generate(
+            outputShape[1],
+            (j) => List.filled(outputShape[2], 0.0),
+          ),
+        );
+      }
+
+      ModelLoader.interpreter.run(input, output);
+      final detections = _detector!.processOutput(output);
+
+      // Store detections (avoid duplicates by checking confidence and class)
+      for (var detection in detections) {
+        _capturedDetections.add({
+          'class': detection['label'],
+          'confidence': detection['confidence'],
+        });
+      }
+
+      print('Captured image with ${detections.length} detections. Total: ${_capturedDetections.length}');
+      
+      // Update state to show in top bar
+      if (mounted) {
+        setState(() {}); // Trigger rebuild to update top bar
+      }
+    } catch (e) {
+      print('Error capturing and detecting: $e');
+    } finally {
+      setState(() => _isDetecting = false);
+    }
+  }
+
+  /// Generate cost report from detections
+  /// Works with both:
+  /// - Live camera mode: uses _capturedDetections (accumulated from multiple captures)
+  /// - Upload image mode: uses _detections (from single uploaded image)
+  void _generateReport() {
+    // Determine which detections to use
+    List<Map<String, dynamic>> sourceDetections;
+    String sourceName;
     
-    // Convert detections to format expected by price predictor
-    final detectionsForPredictor = _detections!.map((d) => {
-      'class': d['label'] as String,
-      'confidence': d['confidence'] as double,
-    }).toList();
-    
-    // Get cost predictions
-    final predictedDetections = pricePredictor.predictBatch(detectionsForPredictor);
-    
-    // Navigate to report screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DefectReportScreen(
-          detections: predictedDetections,
+    if (_capturedDetections.isNotEmpty) {
+      // Live camera mode: use captured detections
+      sourceDetections = _capturedDetections;
+      sourceName = 'captured';
+    } else if (_detections != null && _detections!.isNotEmpty) {
+      // Upload image mode: use current detections
+      sourceDetections = _detections!.map((d) => {
+        'class': d['label'] as String,
+        'confidence': d['confidence'] as double,
+      }).toList();
+      sourceName = 'uploaded image';
+    } else {
+      // No detections available
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No defects detected. Please upload an image with defects or capture photos.'),
+          backgroundColor: Colors.orange,
         ),
-      ),
-    );
+      );
+      return;
+    }
+
+    try {
+      print('📊 Generating report from $sourceName: ${sourceDetections.length} detections');
+      
+      final pricePredictor = PricePredictor();
+      
+      // Deduplicate detections by grouping similar classes with high confidence
+      final Map<String, double> deduplicatedMap = {};
+      for (var detection in sourceDetections) {
+        final className = detection['class'] as String;
+        final confidence = detection['confidence'] as double;
+        
+        // Keep the highest confidence for each class
+        if (!deduplicatedMap.containsKey(className) || 
+            deduplicatedMap[className]! < confidence) {
+          deduplicatedMap[className] = confidence;
+        }
+      }
+      
+      // Convert back to list format
+      final detectionsForPredictor = deduplicatedMap.entries.map((e) => {
+        'class': e.key,
+        'confidence': e.value,
+      }).toList();
+      
+      print('   Deduplicated to ${detectionsForPredictor.length} unique defects');
+      for (var d in detectionsForPredictor) {
+        print('   - ${d['class']}: ${((d['confidence'] as double) * 100).toStringAsFixed(1)}%');
+      }
+      
+      // Get cost predictions
+      final predictedDetections = pricePredictor.predictBatch(detectionsForPredictor);
+      
+      print('✅ Generated ${predictedDetections.length} predicted detections');
+      
+      // Navigate to report screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DefectReportScreen(
+            detections: predictedDetections,
+          ),
+        ),
+      );
+    } catch (e, stackTrace) {
+      print('❌ Error generating report: $e');
+      print('Stack trace: $stackTrace');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error generating report: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override
@@ -380,7 +584,7 @@ class _CameraScreenState extends State<CameraScreen> {
             Positioned.fill(
               child: CameraPreview(_controller!),
             ),
-            // Detection overlay
+            // Detection overlay (live detection boxes)
             if (_detections != null)
               ..._detections!.map((d) => _buildDetectionBox(d)),
             // Status indicator
@@ -390,16 +594,15 @@ class _CameraScreenState extends State<CameraScreen> {
               right: 16,
               child: _buildDetectionStatus(),
             ),
+            // Bottom controls
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: _buildCameraControls(),
+            ),
           ],
         ),
-        floatingActionButton: _detections != null && _detections!.isNotEmpty
-            ? FloatingActionButton.extended(
-                onPressed: _generateReport,
-                icon: const Icon(Icons.assessment),
-                label: const Text('Generate Report'),
-                backgroundColor: Colors.blue,
-              )
-            : null,
       );
     }
 
@@ -443,45 +646,87 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
               ] else ...[
                 // Show image with detections
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Stack(
-                      children: [
-                        Image.memory(_testImageBytes!),
-                        if (_detections != null)
-                          ..._detections!.map((d) => _buildDetectionBoxForImage(d, constraints)),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildDetectionsList(),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _detections != null && _detections!.isNotEmpty
-                          ? _generateReport
-                          : null,
-                      icon: const Icon(Icons.assessment),
-                      label: const Text('Generate Report'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
+                if (_isDetecting) ...[
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Detecting defects...'),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      onPressed: () => setState(() {
-                        _testImageBytes = null;
-                        _detections = null;
-                      }),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Try Another'),
+                  ),
+                ] else ...[
+                  // Constrained image with detection boxes
+                  Container(
+                    constraints: const BoxConstraints(
+                      maxHeight: 400,
+                      maxWidth: double.infinity,
                     ),
-                  ],
-                ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Stack(
+                            children: [
+                              Image.memory(
+                                _testImageBytes!,
+                                fit: BoxFit.contain,
+                                width: constraints.maxWidth,
+                              ),
+                              if (_detections != null)
+                                ..._detections!.map((d) => _buildDetectionBoxForImage(d, constraints)),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Detection results
+                  _buildDetectionsList(),
+                  const SizedBox(height: 16),
+                  // Action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _detections != null && _detections!.isNotEmpty
+                            ? _generateReport
+                            : null,
+                        icon: const Icon(Icons.assessment),
+                        label: const Text('Generate Report'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => setState(() {
+                          _testImageBytes = null;
+                          _detections = null;
+                          _capturedDetections.clear();
+                        }),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try Another'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ],
           ),
@@ -492,63 +737,179 @@ class _CameraScreenState extends State<CameraScreen> {
 
   /// Build detection status indicator
   Widget _buildDetectionStatus() {
+    // Build detection info text
+    String statusText = 'Scanning...';
+    IconData statusIcon = Icons.search;
+    
+    if (_detections != null && _detections!.isNotEmpty) {
+      statusIcon = Icons.check_circle;
+      final detectionsText = _detections!.take(3).map((d) => 
+        '${d['label']}: ${((d['confidence'] as double) * 100).toStringAsFixed(0)}%'
+      ).join(', ');
+      final moreText = _detections!.length > 3 ? ' (+${_detections!.length - 3} more)' : '';
+      statusText = '${_detections!.length} detected: $detectionsText$moreText';
+    }
+    
+    // Add captured defects info if any
+    String capturedText = '';
+    if (_capturedDetections.isNotEmpty) {
+      capturedText = ' | ${_capturedDetections.length} captured';
+    }
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.blue.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            _detections != null && _detections!.isNotEmpty
-                ? Icons.check_circle
-                : Icons.search,
+            statusIcon,
             color: Colors.white,
-            size: 16,
+            size: 18,
           ),
-          const SizedBox(width: 8),
-                          Text(
-            _detections != null && _detections!.isNotEmpty
-                ? '${_detections!.length} objects detected'
-                : 'Scanning...',
-            style: const TextStyle(color: Colors.white, fontSize: 14),
-                          ),
-                        ],
-                      ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              '$statusText$capturedText',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build camera controls (capture and report buttons)
+  Widget _buildCameraControls() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Generate Report button
+        if (_capturedDetections.isNotEmpty)
+          ElevatedButton.icon(
+            onPressed: _generateReport,
+            icon: const Icon(Icons.assessment),
+            label: const Text('Generate Report'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
+            ),
+          ),
+        if (_capturedDetections.isNotEmpty)
+          const SizedBox(width: 16),
+        // Capture button
+        FloatingActionButton.large(
+          onPressed: _isDetecting ? null : _captureAndDetect,
+          backgroundColor: Colors.white,
+          child: _isDetecting
+              ? const CircularProgressIndicator(strokeWidth: 2)
+              : const Icon(Icons.camera_alt, size: 32, color: Colors.black),
+        ),
+      ],
     );
   }
 
   /// Build detection results list
   Widget _buildDetectionsList() {
-    if (_detections == null || _detections!.isEmpty) {
+    if (_detections == null) {
       return const SizedBox.shrink();
+    }
+
+    if (_detections!.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.orange.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'No defects detected in this image',
+                style: TextStyle(
+                  color: Colors.orange.shade900,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black87,
+        color: Colors.blue.shade50,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Detected:',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.blue.shade700, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Detected Defects (${_detections!.length}):',
+                style: TextStyle(
+                  color: Colors.blue.shade900,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           ..._detections!.map((d) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Text(
-              '• ${d['label']}: ${(d['confidence'] * 100).toStringAsFixed(0)}%',
-              style: const TextStyle(color: Colors.white),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade700,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${d['label']}: ${((d['confidence'] as double) * 100).toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      color: Colors.blue.shade900,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           )),
         ],

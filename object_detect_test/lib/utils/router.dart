@@ -1,6 +1,9 @@
 import 'package:go_router/go_router.dart';
+import 'package:object_detect_test/ui/views/camera_screen.dart';
+import 'package:object_detect_test/ui/views/contractor_home_screen.dart';
 import 'package:object_detect_test/ui/views/create_listing_screen.dart';
 import 'package:object_detect_test/ui/views/email_signup_screen.dart';
+import 'package:object_detect_test/ui/views/estimation_screen.dart';
 import 'package:object_detect_test/ui/views/listing_detail_contractor_screen.dart';
 import 'package:object_detect_test/ui/views/listing_detail_screen.dart';
 import 'package:object_detect_test/ui/views/listing_map_screen.dart';
@@ -21,6 +24,18 @@ final GoRouter router = GoRouter(
       path: '/',
       builder: (context, state) {
         return const LoginScreen();
+      },
+    ),
+    GoRoute(
+      path: '/estimation',
+      builder: (context, state) {
+        return const EstimationScreen();
+      },
+    ),
+    GoRoute(
+      path: '/camera',
+      builder: (context, state) {
+        return const CameraScreen();
       },
     ),
     GoRoute(
