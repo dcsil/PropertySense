@@ -121,6 +121,8 @@ Our project uses a comprehensive testing strategy with both **unit tests** and *
 
 **Latest passing CI with coverage artifacts:** [View latest CI run](https://github.com/dcsil/PropertySense/actions/workflows/unit-test.yaml)
 
+**Example CI run** with 68.3% coverage, report in artifact (look inside index.html file): [view here](https://github.com/dcsil/PropertySense/actions/runs/19918152278)
+
 **Code Coverage:** Coverage is tracked and reported in CI/CD. Current coverage is at **68.3%** line coverage across the application. Coverage reports are generated using `flutter test --coverage` and uploaded as artifacts in GitHub Actions.
 
 ## Code Quality & Tooling
