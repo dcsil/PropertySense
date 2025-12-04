@@ -90,6 +90,49 @@ In theory, we could also submit the app for review for the App Store. However, w
 
 # Testing
 
+### Running Tests
+
+Run all unit tests:
+```bash
+cd object_detect_test
+flutter test
+```
+
+Run tests with coverage:
+```bash
+flutter test --coverage
+```
+
+Run a specific test file:
+```bash
+flutter test test/ui/viewmodels/login_viewmodel_test.dart
+```
+
+### Test Structure
+
+- **Unit Tests**: Located in `test/` directory, organized to mirror `lib/` structure
+- **Integration Tests**: Located in `integration_test/` directory
+
+### Code Coverage
+
+Coverage reports are generated automatically in CI/CD. To generate locally:
+
+```bash
+flutter test --coverage
+# Coverage data is written to coverage/lcov.info
+```
+
+### Test Dependencies
+
+- `flutter_test` - Core testing framework
+- `mockito` - Mocking framework
+- `build_runner` - Code generation for mocks
+
+To generate mock classes:
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
 # Note for CSC491 assessors
 If you like to avoid the setup process that involves the XCode + simulator process. Please feel free to message @SunnyK in the discord. I will add you to the testflight group so that you can download the app on your phones. This is the easiest method to actually get to use the app(for what's it's worth) on a real device.
 
