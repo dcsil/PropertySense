@@ -368,9 +368,18 @@ class _CameraScreenState extends State<CameraScreen> {
       ModelLoader.interpreter.run(input, output);
 
       // Process results using detector
-      setState(() => _detections = _detector!.processOutput(output));
+      final detections = _detector!.processOutput(output);
+      setState(() => _detections = detections);
       
-      print('Found ${_detections?.length ?? 0} home repair issues');
+      print('📸 Upload image detection complete:');
+      print('   Found ${detections.length} home repair issues');
+      if (detections.isNotEmpty) {
+        for (var d in detections) {
+          print('   - ${d['label']}: ${((d['confidence'] as double) * 100).toStringAsFixed(1)}%');
+        }
+      } else {
+        print('   ⚠️ No defects detected above threshold');
+      }
     } catch (e) {
       print('Detection error: $e');
     } finally {
@@ -451,53 +460,91 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  /// Generate cost report from captured detections (deduplicated)
+  /// Generate cost report from detections
+  /// Works with both:
+  /// - Live camera mode: uses _capturedDetections (accumulated from multiple captures)
+  /// - Upload image mode: uses _detections (from single uploaded image)
   void _generateReport() {
-    if (_capturedDetections.isEmpty) {
+    // Determine which detections to use
+    List<Map<String, dynamic>> sourceDetections;
+    String sourceName;
+    
+    if (_capturedDetections.isNotEmpty) {
+      // Live camera mode: use captured detections
+      sourceDetections = _capturedDetections;
+      sourceName = 'captured';
+    } else if (_detections != null && _detections!.isNotEmpty) {
+      // Upload image mode: use current detections
+      sourceDetections = _detections!.map((d) => {
+        'class': d['label'] as String,
+        'confidence': d['confidence'] as double,
+      }).toList();
+      sourceName = 'uploaded image';
+    } else {
+      // No detections available
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No defects captured. Take photos first!'),
+          content: Text('No defects detected. Please upload an image with defects or capture photos.'),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
 
-    final pricePredictor = PricePredictor();
-    
-    // Deduplicate detections by grouping similar classes with high confidence
-    final Map<String, double> deduplicatedMap = {};
-    for (var detection in _capturedDetections) {
-      final className = detection['class'] as String;
-      final confidence = detection['confidence'] as double;
+    try {
+      print('📊 Generating report from $sourceName: ${sourceDetections.length} detections');
       
-      // Keep the highest confidence for each class
-      if (!deduplicatedMap.containsKey(className) || 
-          deduplicatedMap[className]! < confidence) {
-        deduplicatedMap[className] = confidence;
+      final pricePredictor = PricePredictor();
+      
+      // Deduplicate detections by grouping similar classes with high confidence
+      final Map<String, double> deduplicatedMap = {};
+      for (var detection in sourceDetections) {
+        final className = detection['class'] as String;
+        final confidence = detection['confidence'] as double;
+        
+        // Keep the highest confidence for each class
+        if (!deduplicatedMap.containsKey(className) || 
+            deduplicatedMap[className]! < confidence) {
+          deduplicatedMap[className] = confidence;
+        }
       }
-    }
-    
-    // Convert back to list format
-    final detectionsForPredictor = deduplicatedMap.entries.map((e) => {
-      'class': e.key,
-      'confidence': e.value,
-    }).toList();
-    
-    print('Deduplicated ${_capturedDetections.length} detections to ${detectionsForPredictor.length} unique defects');
-    
-    // Get cost predictions
-    final predictedDetections = pricePredictor.predictBatch(detectionsForPredictor);
-    
-    // Navigate to report screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DefectReportScreen(
-          detections: predictedDetections,
+      
+      // Convert back to list format
+      final detectionsForPredictor = deduplicatedMap.entries.map((e) => {
+        'class': e.key,
+        'confidence': e.value,
+      }).toList();
+      
+      print('   Deduplicated to ${detectionsForPredictor.length} unique defects');
+      for (var d in detectionsForPredictor) {
+        print('   - ${d['class']}: ${((d['confidence'] as double) * 100).toStringAsFixed(1)}%');
+      }
+      
+      // Get cost predictions
+      final predictedDetections = pricePredictor.predictBatch(detectionsForPredictor);
+      
+      print('✅ Generated ${predictedDetections.length} predicted detections');
+      
+      // Navigate to report screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DefectReportScreen(
+            detections: predictedDetections,
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e, stackTrace) {
+      print('❌ Error generating report: $e');
+      print('Stack trace: $stackTrace');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error generating report: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override
@@ -599,45 +646,87 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
               ] else ...[
                 // Show image with detections
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Stack(
-                      children: [
-                        Image.memory(_testImageBytes!),
-                        if (_detections != null)
-                          ..._detections!.map((d) => _buildDetectionBoxForImage(d, constraints)),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildDetectionsList(),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _detections != null && _detections!.isNotEmpty
-                          ? _generateReport
-                          : null,
-                      icon: const Icon(Icons.assessment),
-                      label: const Text('Generate Report'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
+                if (_isDetecting) ...[
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Detecting defects...'),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      onPressed: () => setState(() {
-                        _testImageBytes = null;
-                        _detections = null;
-                      }),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Try Another'),
+                  ),
+                ] else ...[
+                  // Constrained image with detection boxes
+                  Container(
+                    constraints: const BoxConstraints(
+                      maxHeight: 400,
+                      maxWidth: double.infinity,
                     ),
-                  ],
-                ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Stack(
+                            children: [
+                              Image.memory(
+                                _testImageBytes!,
+                                fit: BoxFit.contain,
+                                width: constraints.maxWidth,
+                              ),
+                              if (_detections != null)
+                                ..._detections!.map((d) => _buildDetectionBoxForImage(d, constraints)),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Detection results
+                  _buildDetectionsList(),
+                  const SizedBox(height: 16),
+                  // Action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _detections != null && _detections!.isNotEmpty
+                            ? _generateReport
+                            : null,
+                        icon: const Icon(Icons.assessment),
+                        label: const Text('Generate Report'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => setState(() {
+                          _testImageBytes = null;
+                          _detections = null;
+                          _capturedDetections.clear();
+                        }),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try Another'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ],
           ),
@@ -742,33 +831,85 @@ class _CameraScreenState extends State<CameraScreen> {
 
   /// Build detection results list
   Widget _buildDetectionsList() {
-    if (_detections == null || _detections!.isEmpty) {
+    if (_detections == null) {
       return const SizedBox.shrink();
+    }
+
+    if (_detections!.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.orange.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'No defects detected in this image',
+                style: TextStyle(
+                  color: Colors.orange.shade900,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black87,
+        color: Colors.blue.shade50,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Detected:',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.blue.shade700, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Detected Defects (${_detections!.length}):',
+                style: TextStyle(
+                  color: Colors.blue.shade900,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           ..._detections!.map((d) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Text(
-              '• ${d['label']}: ${(d['confidence'] * 100).toStringAsFixed(0)}%',
-              style: const TextStyle(color: Colors.white),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade700,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${d['label']}: ${((d['confidence'] as double) * 100).toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      color: Colors.blue.shade900,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           )),
         ],

@@ -98,7 +98,7 @@ class DefectReportScreen extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           ElevatedButton.icon(
-            onPressed: () => context.go('/homeowner'),
+            onPressed: () => context.go('/listings'),
             icon: const Icon(Icons.home),
             label: const Text('Back to Home'),
             style: ElevatedButton.styleFrom(
@@ -134,7 +134,7 @@ class DefectReportScreen extends StatelessWidget {
             // Back to Home button
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () => context.go('/homeowner'),
+                onPressed: () => context.go('/listings'),
                 icon: const Icon(Icons.home),
                 label: const Text('Back to Home'),
                 style: OutlinedButton.styleFrom(
