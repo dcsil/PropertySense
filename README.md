@@ -89,3 +89,10 @@ From there, we can allow specific Testflight groups access to this build, and al
 In theory, we could also submit the app for review for the App Store. However, we have not done this for this project.
 
 # Testing
+
+# Note for CSC491 assessors
+If you like to avoid the setup process that involves the XCode + simulator process. Please feel free to message @SunnyK in the discord. I will add you to the testflight group so that you can download the app on your phones. This is the easiest method to actually get to use the app(for what's it's worth) on a real device.
+
+Other methods such as IPA sideloading unfortunately will require me to add your phone's device IDs to the provisioning profiles, or require an Enterprise app store connect account. 
+
+Thank you!!!
