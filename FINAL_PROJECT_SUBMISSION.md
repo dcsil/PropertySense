@@ -214,7 +214,7 @@ The following packages are used for testing:
 
 
 # 5. Demo Recording and In Class Live Demo
-[Link to Demo Video](https://github.com/dcsil/PropertySense/blob/final-submission-doc/propertysense_demo.mp4)
+[Link to Demo Video]([https://github.com/dcsil/PropertySense/blob/final-submission-doc/propertysense_demo.mp4](https://drive.google.com/file/d/1bCr-RM_9vbgxWerSUnBh7lf3o3nPY-Al/view?usp=drive_link)
 ### App Testing Guide
 **Homeowner View**
 - Upload Photos: if camera detected (ie. on a phone), will default to live detection
