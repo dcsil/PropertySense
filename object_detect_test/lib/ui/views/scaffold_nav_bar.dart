@@ -43,6 +43,8 @@ class ScaffoldWithNavBar extends StatelessWidget {
                 context.go('/inbox-homeowner');
               case 2:
                 context.push('/profile-homeowner');
+              case 3:
+                context.push('/estimation');
             }
           }
         },
@@ -81,6 +83,11 @@ class ScaffoldWithNavBar extends StatelessWidget {
                   icon: Icon(Icons.person_outline),
                   selectedIcon: Icon(Icons.person),
                   label: 'Profile',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.camera),
+                  selectedIcon: Icon(Icons.camera_alt),
+                  label: 'Camera',
                 ),
               ],
       ),

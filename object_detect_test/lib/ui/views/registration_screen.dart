@@ -43,7 +43,7 @@ class _RegistrationScreenContent extends StatelessWidget {
       }
       switch (viewModel.currentUser!.type) {
         case UserType.homeowner:
-          context.go('/listings');
+          context.go('/estimation');
         case UserType.contractor:
           context.go('/listings-swipe');
       }
